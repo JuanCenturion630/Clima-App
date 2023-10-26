@@ -26,10 +26,10 @@ export class ClimaService {
 
   /** Obtener URL en base a las coordenadas:
    * Impacta con la API y retorna vectores con datos del clima en función de los parámetros siguientes.
-   * @param lat - latitud.
-   * @param lon - longitud.
-   * @param unidad - sistema métrico utilizado para mostrar los datos. Estándar o imperial.
-   * @param idioma
+   * @param {number} lat - latitud.
+   * @param {number} lon - longitud.
+   * @param {string} unidad - sistema métrico utilizado para mostrar los datos. Estándar o imperial.
+   * @param {string} idioma
    * @returns - devuelve un vector luego de impactar con la API.
    */
   getURL_Coord(lat:number,lon:number,unidad:string,idioma:string) {

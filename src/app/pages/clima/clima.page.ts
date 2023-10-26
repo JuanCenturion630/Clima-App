@@ -28,6 +28,7 @@ export class ClimaPage {
   unidad:string=`metric`; //Parámetro para la API refiriéndose al sistema métrico decimal.
   idioma:string=`es`; //Parámetro para la API refiriéndose al español.
   registro:string=``; //Lleva un registro de cuál fue el último componente que recibió click.
+  iconURL: string = ''; //Recibe iconos de la API.
 
   constructor(private conexClima:ClimaService, private route:ActivatedRoute, 
     private authService:AuthService,private router: Router, 
@@ -231,7 +232,7 @@ export class ClimaPage {
    * Conecta con la API OpenWeatherMap y obtiene datos sobre temperatura, viento y humedad.
    * @param {string} nomCiudad 
    */
-  getClimaxCiudad(nomCiudad: string){
+  getClimaxCiudad(nomCiudad: string) {
     this.conexClima.getURL_Ciudad(nomCiudad,this.unidad,this.idioma).subscribe( //Evaluar por qué no funciona el "suscribe".
       (r) => { this.clima=r, console.log(`Respuesta: `,r) },
       (e) => console.error(`Error: `,e)
