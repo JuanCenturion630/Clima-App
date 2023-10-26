@@ -1,0 +1,260 @@
+<ion-menu side="end" contentId="Encabezado">
+  <ion-header>
+    <ion-toolbar>
+      <ion-title>Opciones</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content class="ion-padding">
+    Seleccione una opción.
+
+    <div style="margin-top: 5px;"></div> <!--Espaciado-->
+    
+    <!--Botón para Cambiar de Celsius a Farenheite y viceversa-->
+    <ion-button fill="outline" (click)="sistemaMetrico()"(click)="cerrarMenu()">
+      <ion-icon slot="start" name="partly-sunny"></ion-icon>
+      {{ btnNom }}
+    </ion-button>
+
+    <div style="margin-top: 5px;"></div> <!--Espaciado-->
+    
+    <!--Botón para cerrar sesión en la aplicación-->
+    <ion-button fill="outline" (click)="cerrarMenu()" (click)="cerrarSesion()">
+      <ion-icon slot="start" name="log-out"></ion-icon>
+      Cerrarse sesión
+    </ion-button>
+
+    <div style="margin-top: 5px;"></div> <!--Espaciado-->
+    
+    <!--ion-button (click)="toggleTheme()" fill="outline">
+      <ion-icon slot="start" name="sunny"></ion-icon>
+      Modo claro
+    </ion-button-->
+  </ion-content>
+</ion-menu>
+
+<ion-header id="Encabezado">
+  <ion-toolbar>
+    <ion-title class="tituloEncabezado"> Clima a Tiempo </ion-title>
+    <ion-buttons slot="end"> <!--"slot" es la posición del botón en la pantalla-->
+      <ion-menu-button auto-hide="false"></ion-menu-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<!--"fullscreen" en true provoca que la aplicación llene toda la pantalla-->
+<ion-content [fullscreen]="true">
+  <!--Barra de búsqueda-->
+  <ion-toolbar>
+    <!--Explicación de los parámetros usados en el ion-searchbar:
+      "ngModel" escribir sobre la variable (definida en clima.page.ts).
+      "ionChange" evento que se activa al cambiar el valor de la barra de búsqueda e invoca un método.
+      "placeholder" es la marca de agua sobre el control.
+      "debounce" es la cantidad de milisegundos de espera antes del evento IonInput.
+      "IonInput" la entrada del control se pasa como parámetro del método definido en clima.page.ts.
+      "click" espera a un clic sobre el control para activar un método en clima.page.ts.
+      "expand" expande al máximo la lista traida por el método recibido en "click".
+    -->
+    <!--Datos extras sobre los parámetros usados en el ion-searchbar:
+      "$event" es obligatorio, traslada "searchText" y "searchQuery" como parámetro de los métodos invocados.
+      (ionInput)="detectarEnter($event)" no funciona.
+    -->
+    <ion-searchbar placeholder="Ingrese una ciudad" 
+      [(ngModel)]="searchText" (ionChange)="sbarObtenerClimaCiudad($event)" 
+      [(ngModel)]="searchQuery" (ionInput)="filtrarElemento($event)" [debounce]="1000"
+      (click)="mostrarLista()" expand="full">
+    </ion-searchbar>
+
+    <!--Explicacion parámetros usados en ion-list:
+      "ngClass" permite la implementación de clases de distintas páginas, como
+      "hidden-list" de clima.page.css y "isListVisible" de clima.page.ts.
+      "ngFor" inicia un bucle for con Angular.
+      "let result of results" imprime los resultados del vector recorrido por el for.
+    -->
+    <!--Datos extras de los parámetros usados en ion-list:
+      "results", a pesar de ser definida por el desarrollador, debe llamarse obligatoriamente así para activar el 
+      "let result of results"
+    -->
+    <!--ion-list [ngClass]="{ 'mostrarLista-style': !listaVisible }">
+      <ion-item *ngFor="let result of results" (click)="setSearchQuery(result)" (click)="mostrarLista()">
+        <ion-label>{{ result }}</ion-label>
+      </ion-item>
+    </ion-list-->
+  </ion-toolbar>
+
+  <div style="margin-top: 2px;"></div> <!--Espaciado-->
+
+  <!--Nombre ciudad y botón GPS-->
+  <ion-toolbar>
+    <div style="margin-top: 5px;"></div> <!--Espaciado-->
+    <!--Nombre ciudad-->
+    <ion-label *ngIf="clima" class="desviarDerecha">
+      <span class="opaco">Resultados para </span>
+      <span class="negrita">{{clima.city.name}}, {{clima.city.country}}</span>
+    </ion-label>
+
+    <!--Botón GPS
+      "shape" forma del botón.
+      "size" tamaño del botón.
+      "fill" rellenado del botón.
+      "class" implementa estilos CSS.
+      "click" evento que se activa al hacer click y ejecuta un método.
+    -->
+    <ion-button shape="round" size="small" fill="outline" 
+      class="botonGPS" (click)="btnObtenerClimaGPS()">
+      <ion-icon slot="start" name="globe-outline"></ion-icon>
+      Usar ubicación precisa
+    </ion-button>
+    <div style="margin-top: 5px;"></div> <!--Espaciado-->
+  </ion-toolbar>
+
+  <div style="margin-top: 2px;"></div> <!--Espaciado-->
+
+  <!--Tarjeta del clima-->
+  <ion-toolbar>
+    <!--Título-->
+    <div style="margin-top: 5px;"></div> <!--Espaciado-->
+    <ion-label class="desviarDerecha masTamanio">Clima</ion-label>
+    <div style="margin-top: 5px;"></div> <!--Espaciado-->
+
+    <!--Día, hora y breve descripción del clima-->
+    <ion-label *ngIf="clima" class="desviarDerecha opaco">
+      <!--La primera letra de la descrip. del clima se vuelve mayúscula y se concatena con el resto-->
+      {{fecha}}. {{clima.list[btnSeleccionado].weather[0].description.charAt(0).toUpperCase()+
+      clima.list[btnSeleccionado].weather[0].description.slice(1)}}.
+    </ion-label>
+
+    <div style="margin-top: 5px;"></div> <!--Espaciado-->
+
+    <!--Temperatura, icono y datos de presión, humedad y viento...-->
+    <ion-card>
+      <ion-card-content>
+        <!--Imagen del clima--> <!--{{clima.list[0].weather[0].icon}}-->
+        <img class="comprimirImagen" src="https://ionicframework.com/docs/img/demos/thumbnail.svg"/>
+        
+        <!--Cifra del clima-->
+        <ion-label *ngIf="clima" class="esteticaCifraClima">{{clima.list[btnSeleccionado].main.temp | number: '1.0-0'}} {{sm}}</ion-label>
+        
+        <!--Botones de ºC y ºF
+        <ion-row class="posicionBotones">
+          <ion-button fill="clear" (click)="btnObtenerClimaGPS()">ºC</ion-button>
+          <ion-button fill="clear" (click)="btnObtenerClimaGPS_EnF()">ºF</ion-button>
+        </ion-row-->
+        
+        <!--Presión, humedad y viento-->
+        <!--ion-row imprime un renglón en pantalla-->
+        <ion-card-content class="posicionInfoExtra">
+          <ion-label *ngIf="clima">
+            Presión.: {{clima.list[btnSeleccionado].main.pressure}} hPa
+            <ion-row>Humedad: {{clima.list[btnSeleccionado].main.humidity}}%</ion-row>
+            <ion-row>Viento: {{clima.list[btnSeleccionado].wind.speed}} {{viento}}</ion-row>
+          </ion-label>
+        </ion-card-content>
+      </ion-card-content>
+    </ion-card>
+
+    <!--Barra de clima por horas-->
+    <ion-card>
+      <ion-card-content>
+        <ion-range [ticks]="true" [snaps]="true" [min]="0" [max]="5" (ionChange)="onIonChange($event)"></ion-range>
+      </ion-card-content>
+    </ion-card>
+
+    <!--Barra de clima por días-->
+    <!--Día 1-->
+    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(0)">
+      <ion-label *ngIf="clima">
+        {{diaNom[0]}} {{diaDelMes[0]}}
+        <ion-row>
+          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+        </ion-row>
+        <ion-row style="margin-top: 15px;">{{clima.list[0].main.temp_max}}º.</ion-row>
+        <ion-row>{{clima.list[0].main.temp_min}}º.</ion-row>
+      </ion-label>
+    </ion-button>
+
+    <!--Día 2-->
+    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(1)">
+      <ion-label *ngIf="clima">
+        {{diaNom[1]}} {{diaDelMes[1]}}
+        <ion-row>
+          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+        </ion-row>
+        <ion-row style="margin-top: 15px;">{{clima.list[1].main.temp_max}}º.</ion-row>
+        <ion-row>{{clima.list[1].main.temp_min}}º.</ion-row>
+      </ion-label>
+    </ion-button>
+
+    <!--Día 3-->
+    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(2)">
+      <ion-label *ngIf="clima">
+        {{diaNom[2]}} {{diaDelMes[2]}}
+        <ion-row>
+          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+        </ion-row>
+        <ion-row style="margin-top: 15px;">{{clima.list[2].main.temp_max}}º.</ion-row>
+        <ion-row>{{clima.list[2].main.temp_min}}º.</ion-row>
+      </ion-label>
+    </ion-button>
+
+    <!--Día 4-->
+    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(3)">
+      <ion-label *ngIf="clima">
+        {{diaNom[3]}} {{diaDelMes[3]}}
+        <ion-row>
+          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+        </ion-row>
+        <ion-row style="margin-top: 15px;">{{clima.list[3].main.temp_max}}º.</ion-row>
+        <ion-row>{{clima.list[3].main.temp_min}}º.</ion-row>
+      </ion-label>
+    </ion-button>
+
+    <!--Día 5-->
+    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(4)">
+      <ion-label *ngIf="clima">
+        {{diaNom[4]}} {{diaDelMes[4]}}
+        <ion-row>
+          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+        </ion-row>
+        <ion-row style="margin-top: 15px;">{{clima.list[4].main.temp_max}}º.</ion-row>
+        <ion-row>{{clima.list[4].main.temp_min}}º.</ion-row>
+      </ion-label>
+    </ion-button>
+
+    <!--Día 6-->
+    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(5)">
+      <ion-label *ngIf="clima">
+        {{diaNom[5]}} {{diaDelMes[5]}}
+        <ion-row>
+          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+        </ion-row>
+        <ion-row style="margin-top: 15px;">{{clima.list[5].main.temp_max}}º.</ion-row>
+        <ion-row>{{clima.list[5].main.temp_min}}º.</ion-row>
+      </ion-label>
+    </ion-button>
+
+    <!--Día 7-->
+    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(6)">
+      <ion-label *ngIf="clima">
+        {{diaNom[6]}} {{diaDelMes[6]}}
+        <ion-row>
+          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+        </ion-row>
+        <ion-row style="margin-top: 15px;">{{clima.list[6].main.temp_max}}º.</ion-row>
+        <ion-row>{{clima.list[6].main.temp_min}}º.</ion-row>
+      </ion-label>
+    </ion-button>
+
+    <!--Día 8-->
+    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(7)">
+      <ion-label *ngIf="clima">
+        {{diaNom[7]}} {{diaDelMes[7]}}
+        <ion-row>
+          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+        </ion-row>
+        <ion-row style="margin-top: 15px;">{{clima.list[7].main.temp_max}}º.</ion-row>
+        <ion-row>{{clima.list[7].main.temp_min}}º.</ion-row>
+      </ion-label>
+    </ion-button>
+    <div style="margin-top: 5px;"></div>
+  </ion-toolbar>
+</ion-content>

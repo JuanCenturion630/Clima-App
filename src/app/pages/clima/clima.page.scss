@@ -1,0 +1,79 @@
+/* No funciona el modo claro/oscuro
+  body {
+  background-color: var(--background-color-light);
+  color: var(--text-color-light);
+}
+
+//Estilos específicos para el modo oscuro
+.dark-theme {
+  body {
+    background-color: var(--background-color-dark);
+    color: var(--text-color-dark);
+  }
+}*/
+
+.tituloEncabezado {
+  margin-left: 28%;
+  //Elegir fuentes más estéticas.
+}
+.tituloPieDePagina {
+  text-align: center;
+}
+ion-searchbar {
+  --border-radius: 250; //No funciona, no redondea los bordes de la barra de búsqueda.
+}
+.mostrarLista-style {
+  display: none;
+}
+.desviarDerecha {
+  margin-left: 5%;
+}
+.negrita {
+  font-weight: bold;
+}
+.opaco {
+  opacity: 70%; //Mientras más cercano a 0, más transparente.
+}
+.botonGPS {
+  margin-left: 5%;
+  --color: #80d9ff;
+  --border-width: 1px;
+}
+.masTamanio {
+  font-size:130%;
+}
+.desviarIzquierda {
+  margin-right: 500%;
+}
+.esteticaCifraClima {
+  font-size: 240%;
+  margin-left: 2%;
+  color: #ffffff;
+  //font-weight: bold;
+}
+.comprimirImagen {
+  max-width: 20%;
+  vertical-align:middle;
+}
+.posicionBotones {
+  margin-left: 20%;
+  margin-top: -8%;
+}
+.posicionInfoExtra {
+  margin-left: 49%;
+  margin-top: -29%;
+}
+ion-range {
+  --bar-background:#c3c8cc;
+  --bar-background-active:#525251;
+  --knob-background:#0080ff;
+  --knob-border-radius: 0;
+}
+.botonDia {
+  width: 20%;
+  height: 120px;
+  margin-left: 13px;
+  --color: #ffffff;
+  --border-width: 1px;
+  opacity: 70%
+}

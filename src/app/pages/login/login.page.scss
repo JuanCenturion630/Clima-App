@@ -1,0 +1,35 @@
+.texto-centrado {
+  text-align: center;
+}
+
+.container {
+  text-align: center;
+
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.resetear-contrasenia-link {
+  display: flex;
+  justify-content: center;
+
+  a {
+    font-weight: 400;
+    font-size: 0.8em;
+    text-decoration: none;
+  }
+}
+
+.registro-link {
+  display: flex;
+  justify-content: center;
+  font-weight: 400;
+  font-size: 0.8em;
+
+  a {
+    text-decoration: none;
+  }
+}
