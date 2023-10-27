@@ -101,7 +101,7 @@
     -->
     <ion-button shape="round" size="small" fill="outline" 
       class="botonGPS" (click)="btnObtenerClimaGPS()">
-      <ion-icon slot="start" name="globe-outline"></ion-icon>
+      <ion-icon slot="start" name="earth-outline"></ion-icon>
       Usar ubicación precisa
     </ion-button>
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
@@ -127,24 +127,20 @@
 
     <!--Temperatura, icono y datos de presión, humedad y viento...-->
     <ion-card>
-      <ion-card-content>
+      <ion-card-content class="">
         <!--Imagen del clima--> <!--{{clima.list[0].weather[0].icon}}-->
-        <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[btnSeleccionado].weather[0].icon + '@2x.png'"/>
+        <img class="imagenClima" *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[btnSeleccionado].weather[0].icon + '@2x.png'"/>
         
         <!--Cifra del clima-->
-        <ion-label *ngIf="clima" class="esteticaCifraClima">{{clima.list[btnSeleccionado].main.temp | number: '1.0-0'}} {{sm}}</ion-label>
-        
-        <!--Botones de ºC y ºF
-        <ion-row class="posicionBotones">
-          <ion-button fill="clear" (click)="btnObtenerClimaGPS()">ºC</ion-button>
-          <ion-button fill="clear" (click)="btnObtenerClimaGPS_EnF()">ºF</ion-button>
-        </ion-row-->
+        <ion-card-content class="cuadroClimaTemp">
+          <ion-label *ngIf="clima" class="esteticaCifraClima">{{clima.list[btnSeleccionado].main.temp | number: '1.0-0'}}{{sm}}</ion-label>
+        </ion-card-content>
         
         <!--Presión, humedad y viento-->
         <!--ion-row imprime un renglón en pantalla-->
-        <ion-card-content class="posicionInfoExtra">
+        <ion-card-content class="cuadroClimaExtras">
           <ion-label *ngIf="clima">
-            Presión.: {{clima.list[btnSeleccionado].main.pressure}} hPa
+            Precip.: {{clima.list[btnSeleccionado].pop*100 | number: '1.0-0'}}%
             <ion-row>Humedad: {{clima.list[btnSeleccionado].main.humidity}}%</ion-row>
             <ion-row>Viento: {{clima.list[btnSeleccionado].wind.speed}} {{viento}}</ion-row>
           </ion-label>
@@ -154,104 +150,104 @@
 
     <!--Barra de clima por horas-->
     <ion-card>
-      <ion-card-content>
+      <ion-card-content class="bordeCardContent">
         <ion-range [ticks]="true" [snaps]="true" [min]="0" [max]="5" (ionChange)="onIonChange($event)"></ion-range>
       </ion-card-content>
     </ion-card>
 
     <!--Barra de clima por días-->
     <!--Día 1-->
-    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(0)">
-      <ion-label *ngIf="clima">
+    <ion-button fill="{{btnSeleccionado === 0 ? 'outline' : 'default'}}" class="botonDia" (click)="cambiarClima(0)">
+      <ion-label *ngIf="clima" style="margin-top: 5px;">
         {{diaNom[0]}} {{diaDelMes[0]}}
         <ion-row>
-          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+          <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[0].weather[0].icon + '@2x.png'"/>
         </ion-row>
-        <ion-row style="margin-top: 15px;">{{clima.list[0].main.temp_max}}º.</ion-row>
+        <ion-row style="margin-top: 3px;">{{clima.list[0].main.temp_max}}º.</ion-row>
         <ion-row>{{clima.list[0].main.temp_min}}º.</ion-row>
       </ion-label>
     </ion-button>
 
     <!--Día 2-->
-    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(1)">
-      <ion-label *ngIf="clima">
+    <ion-button fill="{{btnSeleccionado === 1 ? 'outline' : 'default'}}" class="botonDia" (click)="cambiarClima(1)">
+      <ion-label *ngIf="clima" style="margin-top: 5px;">
         {{diaNom[1]}} {{diaDelMes[1]}}
         <ion-row>
-          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+          <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[1].weather[0].icon + '@2x.png'"/>
         </ion-row>
-        <ion-row style="margin-top: 15px;">{{clima.list[1].main.temp_max}}º.</ion-row>
+        <ion-row style="margin-top: 3px;">{{clima.list[1].main.temp_max}}º.</ion-row>
         <ion-row>{{clima.list[1].main.temp_min}}º.</ion-row>
       </ion-label>
     </ion-button>
 
     <!--Día 3-->
-    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(2)">
-      <ion-label *ngIf="clima">
+    <ion-button fill="{{btnSeleccionado === 2 ? 'outline' : 'default'}}" class="botonDia" (click)="cambiarClima(2)">
+      <ion-label *ngIf="clima" style="margin-top: 5px;">
         {{diaNom[2]}} {{diaDelMes[2]}}
         <ion-row>
-          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+          <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[2].weather[0].icon + '@2x.png'"/>
         </ion-row>
-        <ion-row style="margin-top: 15px;">{{clima.list[2].main.temp_max}}º.</ion-row>
+        <ion-row style="margin-top: 3px;">{{clima.list[2].main.temp_max}}º.</ion-row>
         <ion-row>{{clima.list[2].main.temp_min}}º.</ion-row>
       </ion-label>
     </ion-button>
 
     <!--Día 4-->
-    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(3)">
-      <ion-label *ngIf="clima">
+    <ion-button fill="{{btnSeleccionado === 3 ? 'outline' : 'default'}}" class="botonDia" (click)="cambiarClima(3)">
+      <ion-label *ngIf="clima" style="margin-top: 5px;">
         {{diaNom[3]}} {{diaDelMes[3]}}
         <ion-row>
-          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+          <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[3].weather[0].icon + '@2x.png'"/>
         </ion-row>
-        <ion-row style="margin-top: 15px;">{{clima.list[3].main.temp_max}}º.</ion-row>
+        <ion-row style="margin-top: 3px;">{{clima.list[3].main.temp_max}}º.</ion-row>
         <ion-row>{{clima.list[3].main.temp_min}}º.</ion-row>
       </ion-label>
     </ion-button>
 
     <!--Día 5-->
-    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(4)">
-      <ion-label *ngIf="clima">
+    <ion-button fill="{{btnSeleccionado === 4 ? 'outline' : 'default'}}" class="botonDia" (click)="cambiarClima(4)">
+      <ion-label *ngIf="clima" style="margin-top: 5px;">
         {{diaNom[4]}} {{diaDelMes[4]}}
         <ion-row>
-          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+          <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[4].weather[0].icon + '@2x.png'"/>
         </ion-row>
-        <ion-row style="margin-top: 15px;">{{clima.list[4].main.temp_max}}º.</ion-row>
+        <ion-row style="margin-top: 3px;">{{clima.list[4].main.temp_max}}º.</ion-row>
         <ion-row>{{clima.list[4].main.temp_min}}º.</ion-row>
       </ion-label>
     </ion-button>
 
     <!--Día 6-->
-    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(5)">
-      <ion-label *ngIf="clima">
+    <ion-button fill="{{btnSeleccionado === 5 ? 'outline' : 'default'}}" class="botonDia" (click)="cambiarClima(5)">
+      <ion-label *ngIf="clima" style="margin-top: 5px;">
         {{diaNom[5]}} {{diaDelMes[5]}}
         <ion-row>
-          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+          <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[5].weather[0].icon + '@2x.png'"/>
         </ion-row>
-        <ion-row style="margin-top: 15px;">{{clima.list[5].main.temp_max}}º.</ion-row>
+        <ion-row style="margin-top: 3px;">{{clima.list[5].main.temp_max}}º.</ion-row>
         <ion-row>{{clima.list[5].main.temp_min}}º.</ion-row>
       </ion-label>
     </ion-button>
 
     <!--Día 7-->
-    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(6)">
-      <ion-label *ngIf="clima">
+    <ion-button fill="{{btnSeleccionado === 6 ? 'outline' : 'default'}}" class="botonDia" (click)="cambiarClima(6)">
+      <ion-label *ngIf="clima" style="margin-top: 5px;">
         {{diaNom[6]}} {{diaDelMes[6]}}
         <ion-row>
-          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+          <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[6].weather[0].icon + '@2x.png'"/>
         </ion-row>
-        <ion-row style="margin-top: 15px;">{{clima.list[6].main.temp_max}}º.</ion-row>
+        <ion-row style="margin-top: 3px;">{{clima.list[6].main.temp_max}}º.</ion-row>
         <ion-row>{{clima.list[6].main.temp_min}}º.</ion-row>
       </ion-label>
     </ion-button>
 
     <!--Día 8-->
-    <ion-button fill="outline" class="botonDia" (click)="cambiarClima(7)">
-      <ion-label *ngIf="clima">
+    <ion-button fill="{{btnSeleccionado === 7 ? 'outline' : 'default'}}" class="botonDia" (click)="cambiarClima(7)">
+      <ion-label *ngIf="clima" style="margin-top: 5px;">
         {{diaNom[7]}} {{diaDelMes[7]}}
         <ion-row>
-          <img src="https://ionicframework.com/docs/img/demos/card-media.png" style="margin-top: 15px;"/>
+          <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[7].weather[0].icon + '@2x.png'"/>
         </ion-row>
-        <ion-row style="margin-top: 15px;">{{clima.list[7].main.temp_max}}º.</ion-row>
+        <ion-row style="margin-top: 3px;">{{clima.list[7].main.temp_max}}º.</ion-row>
         <ion-row>{{clima.list[7].main.temp_min}}º.</ion-row>
       </ion-label>
     </ion-button>

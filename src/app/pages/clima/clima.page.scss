@@ -3,15 +3,12 @@
   background-color: var(--background-color-light);
   color: var(--text-color-light);
 }
-
-//Estilos específicos para el modo oscuro
-.dark-theme {
+.dark-theme { //Estilos específicos para el modo oscuro
   body {
     background-color: var(--background-color-dark);
     color: var(--text-color-dark);
   }
 }*/
-
 .tituloEncabezado {
   margin-left: 28%;
   //Elegir fuentes más estéticas.
@@ -47,13 +44,37 @@ ion-searchbar {
 }
 .esteticaCifraClima {
   font-size: 240%;
-  margin-left: 2%;
+  margin-left: 0%;
+  margin-top: 300%;
   color: #ffffff;
   //font-weight: bold;
 }
-.comprimirImagen {
-  max-width: 20%;
-  vertical-align:middle;
+.cuadroClima {
+  //border: 1px solid grey;
+  //box-shadow: 0 4px 6px rgba(255, 255, 255, 1.0);
+}
+.cuadroClimaIcono {
+  //border: 1px solid grey;
+  width: 80px;
+  margin-right: 15%;
+  //border-radius: 10px;
+}
+.cuadroClimaTemp {
+  //border: 1px solid grey;
+  width: 130px;
+  margin-left: 69px;
+  margin-top: -85px;
+}
+.cuadroClimaExtras {
+  //border: 1px solid grey;
+  width: 160px;
+  height: 75px;
+  margin-left: 175px;
+  margin-top: -78px;
+}
+.imagenClima {
+  margin-left: -5%;
+  margin-top: -5%;
 }
 .posicionBotones {
   margin-left: 20%;
@@ -74,6 +95,7 @@ ion-range {
   height: 120px;
   margin-left: 13px;
   --color: #ffffff;
-  --border-width: 1px;
-  opacity: 70%
+  --border-width: 2px;
+  background-color: #0080ff;
+  opacity: 70%;
 }

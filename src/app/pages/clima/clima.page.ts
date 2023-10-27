@@ -5,6 +5,7 @@ import { RangeCustomEvent } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { MenuController } from '@ionic/angular';
+import { AlertController } from '@ionic/angular';
 //import { Storage } from '@ionic/storage';
 
 @Component({
@@ -32,7 +33,7 @@ export class ClimaPage {
 
   constructor(private conexClima:ClimaService, private route:ActivatedRoute, 
     private authService:AuthService,private router: Router, 
-    private menu: MenuController /*private storage:Storage*/) {
+    private menu: MenuController,private alertController: AlertController /*private storage:Storage*/) {
     //#region Recupera las coordenadas de Login, las imprime en consola y obtiene el clima:
 
     this.lat =+this.route.snapshot.queryParams['lat'];
@@ -228,15 +229,52 @@ export class ClimaPage {
     this.listaVisible = !this.listaVisible;
   }
 
+  errorEncontrado:any;
   /** Searchbar - Obtener Clima por Ciudad:
    * Conecta con la API OpenWeatherMap y obtiene datos sobre temperatura, viento y humedad.
    * @param {string} nomCiudad 
    */
   getClimaxCiudad(nomCiudad: string) {
-    this.conexClima.getURL_Ciudad(nomCiudad,this.unidad,this.idioma).subscribe( //Evaluar por qué no funciona el "suscribe".
-      (r) => { this.clima=r, console.log(`Respuesta: `,r) },
-      (e) => console.error(`Error: `,e)
-    );
+    this.conexClima.getURL_Ciudad(nomCiudad,this.unidad,this.idioma).subscribe({ //Evaluar por qué no funciona el "suscribe".
+      next: (r) => {
+        this.clima=r;
+        console.log(`Éxito al ejecutar getClimaxCiudad en clima.page.ts: `,r);
+      },
+      error: (e) => {
+        this.errorEncontrado=e;
+        console.error(`Error ${e.status} al ejecutar getClimaxCiudad en clima.page.ts: `,e);
+        if(e.status==404)
+          this.alertaError();
+        else if(e.status==0)
+          this.alertaFallaConexion();
+      }
+    });
+  }
+
+  /**
+   * 
+   */
+  async alertaError() {
+    const alert = await this.alertController.create({
+      header: 'Error',
+      subHeader: 'No se ha encontrado el elemento',
+      message: 'La ciudad solicitada no se encuentra en nuestro servicio.',
+      buttons: ['OK'],
+    });
+    await alert.present();
+  }
+
+  /**
+   * 
+   */
+  async alertaFallaConexion() {
+    const alert = await this.alertController.create({
+      header: 'Error',
+      subHeader: 'Conexión no establecida',
+      message: 'Espera unos momentos o revisa tu conexión a internet.',
+      buttons: ['OK'],
+    });
+    await alert.present();
   }
   //#endregion
 
