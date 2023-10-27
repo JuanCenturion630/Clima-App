@@ -89,6 +89,7 @@ export class ClimaPage {
       this.sm = `ºC`;
       this.viento=`Km/h`;
     }
+    
     console.log(`Registro: `,this.registro);
     if(this.registro==`ion-searchbar`) {
       this.conexClima.getURL_Ciudad(this.buscado,this.unidad,this.idioma).subscribe( 
@@ -334,6 +335,27 @@ export class ClimaPage {
 
   //#region Botones de Día por Clima:
 
+  /**
+   * 
+   */
+  calcularCercaniaHoraria(horaSistema:number) {
+    let masCercano = this.intervaloHoras[0];
+    let distanciaMinima = Math.abs(horaSistema - this.intervaloHoras[0]);
+
+    //Recorre el vector y encuentra el número más cercano:
+    for (let i = 0; i < 8; i++) {
+      const distancia = Math.abs(horaSistema - this.intervaloHoras[i]);
+      if (distancia < distanciaMinima) {
+          distanciaMinima = distancia;
+          masCercano = this.intervaloHoras[i];
+          this.indiceIntHor=i;
+      }
+    }
+  }
+  //                          0, 1, 2, 3, 4, 5, 6, 7
+  intervaloHoras:number[] = [12,15,18, 21,0, 3, 6, 9];
+  indiceIntHor:number=0;
+  
   /** Cambiar el Clima según el botón de fecha a elección.
    * En función del índice recibido como parámetro se establece la variable "btnSeleccionado" que es fundamental
    * en clima.page.html para usarse como índice para navegar entre los vectores proporcionados por la API.
@@ -342,6 +364,32 @@ export class ClimaPage {
    */
   cambiarClima(indice: number) {
     this.btnSeleccionado = indice;
+
+    /** Posiciones del vector:
+     *  0 -  7: Día 0 -> 0 (12:00) 1 (15:00) 2 (18:00) 3 (21:00) 4 (00:00) 5 (03:00) 6 (06:00) 7 (09:00).
+     *  8 - 15: Día 1.
+     * 16 - 23: Día 2.
+     * 24 - 31: Día 3.
+     * 32 - 39: Día 4.
+     */
+    
+    switch(this.btnSeleccionado) {
+      case 0:
+        this.calcularCercaniaHoraria(Number(this.hora));
+        break;
+      case 1:
+
+        break;
+      case 2:
+
+        break;
+      case 3:
+
+        break;
+      case 4:
+
+        break;
+    }
     this.fecha = `${this.diaNom[this.btnSeleccionado]} ${this.diaDelMes[this.btnSeleccionado]}, ${this.hora}:${this.minuto}`;
   }
   //#endregion
