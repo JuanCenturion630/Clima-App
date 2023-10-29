@@ -6,7 +6,6 @@ import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { MenuController } from '@ionic/angular';
 import { AlertController } from '@ionic/angular';
-//import { Storage } from '@ionic/storage';
 
 @Component({
   selector: 'app-clima',
@@ -15,21 +14,15 @@ import { AlertController } from '@ionic/angular';
 })
 
 export class ClimaPage {
-  clima! : any; //Variable sin tipo en la que se colocan todos los datos de la API.
-  lat: number=0; //Latitud del dispositivo.
-  long: number=0; //Longitud del dispositivo.
-  ahora = new Date();
-  hora: string=``;
-  minuto: string=``;
-  fecha: string=``;
-  diaNom: string[] = new Array(8);
-  diaDelMes : string[] = new Array(8);
-  d:number=0; //Contador
+  clima!:any; //Variable sin tipo, recibe datos de la API en modo "5 días/3 horas". Recibe los datos de cinco días divididos en intervalos de tres horas.
+  climaActual!:any; //Variable sin tipo, recibe datos de la API en su modo "actual". Recibe los datos de la hora presente.
+  lat:number=0; //Latitud del dispositivo.
+  long:number=0; //Longitud del dispositivo.
   btnSeleccionado:number=0; //Id de los botones de cambio de clima.
   unidad:string=`metric`; //Parámetro para la API refiriéndose al sistema métrico decimal.
   idioma:string=`es`; //Parámetro para la API refiriéndose al español.
   registro:string=``; //Lleva un registro de cuál fue el último componente que recibió click.
-  iconURL: string = ''; //Recibe iconos de la API.
+  iconURL:string=''; //Recibe iconos de la API.
 
   constructor(private conexClima:ClimaService, private route:ActivatedRoute, 
     private authService:AuthService,private router: Router, 
@@ -42,31 +35,6 @@ export class ClimaPage {
     console.log("Longitud en clima.page.ts: " + this.long);
     this.btnObtenerClimaGPS();
     //#endregion
-
-    //#region Obtiene día y hora del clima:
-
-    const dias = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-
-    //i - now.getDay() - d      - día       - Nº
-    //0 - 2            - 2      - martes    - 24
-    //1 - 2            - 3      - miércoles - 25
-    //2 - 2            - 4      - jueves    - 26
-    //3 - 2            - 5      - viernes   - 27
-    //4 - 2            - 6      - sábado    - 28
-    //5 - 2            - 7 -> 0 - domingo   - 29
-    //6 - 2            - 1      - lunes     - 30
-    //7 - 2            - 2      - martes    - 31
-    
-    this.d=this.ahora.getDay(); //Obtengo el número del día en una semana iniciada en domingo.
-    for (let i = 0; i < 8; i++) {
-      if(i>0) this.d++;
-      if(this.d==7) this.d=0;
-      this.diaNom[i]=dias[this.d];
-      this.diaDelMes[i] = `${this.ahora.getDate()+i}`;
-    }
-    this.calcularFecha();
-    console.log("Día del mes: ",this.diaDelMes[0]); //Aún no encontrada la manera de usar el día del mes sin llegar a 32.
-    //#endregion
   }
 
   //#region Menú
@@ -75,7 +43,7 @@ export class ClimaPage {
   sm:string=`ºC`; //Asigna una "ºC" o una "ºF" en función del estado botón "Cambiar a...".
   viento:string=`Km/h`;
   /**
-   * 
+   * @function sistemaMetrico - En función del botón "Cambiar a..." alterna entre Celsius y Fahrenheit.
    */
   sistemaMetrico() {
     if (this.btnNom == 'Cambiar a Fahrenheit') {
@@ -91,17 +59,28 @@ export class ClimaPage {
     }
     
     console.log(`Registro: `,this.registro);
+
     if(this.registro==`ion-searchbar`) {
-      this.conexClima.getURL_Ciudad(this.buscado,this.unidad,this.idioma).subscribe( 
-        (r) => { this.clima=r, console.log(`Respuesta: `,r) });
-        console.log(`Métrica: `,this.unidad);
-        console.log(`Ejecutó getURL_Ciudad()`);
-    } 
+      this.conexClima.getURL_Ciudad(this.buscado,this.unidad,this.idioma).subscribe({ 
+        next: (r) => { 
+          this.clima=r;
+          console.log(`Éxito en clima.page.ts.sistemaMetrico(ion-searchbar): `,r);
+        },
+        error: (e) => {
+          console.log(`Error en clima.page.ts.sistemaMetrico(ion-searchbar): `,e);
+        }
+      });
+    }
     else if(this.registro==`ion-button`) {
-      this.conexClima.getURL_Coord(this.lat,this.long,this.unidad,this.idioma).subscribe( 
-        (r) => { this.clima=r, console.log(`Respuesta: `,r) });
-        console.log(`Métrica: `,this.unidad);
-        console.log(`Ejecutó getURL_Coord()`);
+      this.conexClima.getURL_Coord(this.lat,this.long,this.unidad,this.idioma).subscribe({
+        next: (r) => { 
+          this.clima=r;
+          console.log(`Éxito en clima.page.ts.sistemaMetrico(ion-button): `,r);
+        },
+        error: (e) => {
+          console.log(`Error en clima.page.ts.sistemaMetrico(ion-button)`);
+        }
+      });
     }
   }
 
@@ -109,11 +88,14 @@ export class ClimaPage {
 
   }
 
+  /**
+   * @function cerrarMenu - Cierra el menú desplegable al encabezado de la página del clima.
+   */
   cerrarMenu() {
     this.menu.close();
   }
 
-  /** Cambiar a modo claro:
+  /** Cambiar a modo claro: (NO FUNCIONA)
    * Permite cambiar el color de todos los componentes de la aplicación.
    */
   /*
@@ -136,15 +118,14 @@ export class ClimaPage {
     });
   }*/
   
-  /** Cierra la sesión: 
-   * Cierra la página actual y redirige la aplicación a la página de home.
+  /** 
+   * @function cerrarSesion - Cierra la página actual y redirige la aplicación a la página de home.
    */
   cerrarSesion() {
-    this.authService.cerrarSesion();
-    this.router.navigate(['home']);
-    this.searchText="";
-    this.btnObtenerClimaGPS();
-    //window.location.reload();
+    this.authService.cerrarSesion(); //Cierra la sesión en Firebase.
+    this.router.navigate(['home']); //Redirige la página a home.
+    this.searchText=""; //Limpia la barra de búsqueda.
+    this.btnObtenerClimaGPS(); //Recupera el clima actual en GPS.
   }
   //#endregion
 
@@ -163,13 +144,13 @@ export class ClimaPage {
     'Asunción',
     'Lima',
   ];
-  public results = [...this.ciudades]; //Debe ser obligatoriamente público.
+  public results = [...this.ciudades]; //Debe ser obligatoriamente público ya que se utiliza en HTML.
 
-  /** Searchbar - Obtener Clima por Ciudad:
-   * En función del texto introducido en la barra de búsqueda se calcula el clima de la ciudad solicitada.
+  /**
+   * @function sbarObtenerClimaCiudad - En función del texto introducido en la barra de búsqueda se calcula el clima de la ciudad solicitada.
    * @param {any} evento - Variable indefinida para recibir eventos del componente.
    */
-  searchText: string = '';
+  searchText: string = ''; //Recibe el contenido de la barra de búsqueda en el archivo HTML.
   buscado:string=``;
   sbarObtenerClimaCiudad(evento: any) {
     this.buscado = evento.detail.value;
@@ -178,18 +159,17 @@ export class ClimaPage {
       this.registro=`ion-searchbar`;
       console.log(`Resultado de ${this.registro}: `,this.buscado);
     }
-    else
+    else {
       console.log("Se ha detectado un espacio en blanco en la barra de búsqueda.");
+    }
   }
 
-  /** Seatchbar - Filtrar un Elemento:
-   * En función del texto colocado en la barra de búsqueda filtra entre la lista de sugerencias.
-   * 
+  /**
+   * @function filtrarElemento - En función del texto colocado en la barra de búsqueda filtra entre la lista de sugerencias.
    * Ejemplo: el método recibe una "L" en formato ionInputEvent, lo filtra por tipo (.target), obtiene su 
    * valor (.value), y pasa a minúscula (.toLowerCase()). A continuación se utiliza .filter para recorrer el 
    * vector "ciudades" y comparar cada elemento (c) con `query` ("L"). IndexOf se utiliza para obtener el índice de
-   * la "L" encontrada, sino se encontró "L" devuelve -1.
-   * 
+   * la "L" encontrada, sino se encontró "L" devuelve -1. 
    * @param {any} evento - Variable indefinida para recibir eventos del componente.
    */
   filtrarElemento(evento:any) {
@@ -197,46 +177,40 @@ export class ClimaPage {
     this.results = this.ciudades.filter((c) => c.toLowerCase().indexOf(query) > -1);
   }
 
-  /** Searchbar - Seleccionar elemento de la lista de sugeridos asociada la barra de búsqueda:
-   * Un elemento de la lista de ciudades sugeridas se copia al textbox de la barra de búsqueda.
+  searchQuery: string = ''; //Texto copiado al ion-searchbar.
+  /**
+   * @function searchQuery - Un elemento del ion-list de ciudades sugeridas se copia al textbox de la barra de búsqueda.
+   * @param {string} selectedValue - Ciudad sugerida seleccionada.
    */
-  searchQuery: string = ''; //Texto a copiar del ion-list al ion-searchbar.
   setSearchQuery(selectedValue: string) {
     this.searchQuery = selectedValue;
   }
 
-  /** No funciona 
-   * Detecta la tecla entender para invocar un método del sistema. "===" compara si dos valores son iguales y responde
-   * "true" o "false", en este caso, si las teclas que fueron presionados al estar en el ion-searchbar es un Enter.
-   * @param event 
+  /**
+   * @function detectarEnter - detecta la activación de la tecla enter.
+   * @param {any} event - eventos del componente.
    */
   detectarEnter(event: any) {
-    if (event.detail.inputType === 'insertLineBreak')
-      this.handleEnterKeyPress();
+    if (event.key === "Enter") {
+      console.log('Se presionó tecla enter.');
+    }
   }
 
-  /** No es invocado
-   * Implementación de método del sistema.
+  listaVisible: boolean = false; 
+  /**
+   * @function - Determina si el ion-list asociado a la barra de búsqueda se muestra o no.
    */
-  handleEnterKeyPress() {
-    console.log('Se presionó Enter en el ion-searchbar.');
-  }
-
-  /** Searchbar - Lista de Recomendados Visible/Invisible:
-   * Muestra la lista de elementos sugeridos en la barra de búsqueda de la página.
-   */
-  listaVisible: boolean = false;
   mostrarLista() {
     this.listaVisible = !this.listaVisible;
   }
 
   errorEncontrado:any;
-  /** Searchbar - Obtener Clima por Ciudad:
-   * Conecta con la API OpenWeatherMap y obtiene datos sobre temperatura, viento y humedad.
+  /**
+   * @function getClimaxCiudad - Conecta con la API OpenWeatherMap y obtiene datos sobre temperatura, viento y humedad.
    * @param {string} nomCiudad 
    */
   getClimaxCiudad(nomCiudad: string) {
-    this.conexClima.getURL_Ciudad(nomCiudad,this.unidad,this.idioma).subscribe({ //Evaluar por qué no funciona el "suscribe".
+    this.conexClima.getURL_Ciudad(nomCiudad,this.unidad,this.idioma).subscribe({
       next: (r) => {
         this.clima=r;
         console.log(`Éxito al ejecutar getClimaxCiudad en clima.page.ts: `,r);
@@ -253,7 +227,7 @@ export class ClimaPage {
   }
 
   /**
-   * 
+   * @function alertaError - Crea un mensaje emergente de error para el usuario.
    */
   async alertaError() {
     const alert = await this.alertController.create({
@@ -266,7 +240,7 @@ export class ClimaPage {
   }
 
   /**
-   * 
+   * @function alertaFallaConexion - Crea un mensaje emergente de error para el usuario.
    */
   async alertaFallaConexion() {
     const alert = await this.alertController.create({
@@ -278,119 +252,90 @@ export class ClimaPage {
     await alert.present();
   }
   //#endregion
-
+  
   //#region Botón GPS:
 
-  /** Botón GPS - Obtener Clima por Coordenadas en Celsius.
-   * Impacta en la API enviando latitud y longitud y recibe información de la temperatura, viento y humedad. 
+  /**
+   * @function btnObtenerClimaGPS - Envía latitud y longitud a la API y recibe información del clima.
    */
   btnObtenerClimaGPS() {
-    this.conexClima.getURL_Coord(this.lat,this.long,this.unidad,this.idioma).subscribe(
-      (r) => { this.clima=r, console.log(`Respuesta: `,r) },
-      (e) => console.error(`Error: `,e)
-    );
+    this.conexClima.getURL_Coord(this.lat,this.long,this.unidad,this.idioma).subscribe({
+      next: (r) => { 
+        this.clima=r;
+        console.log(`Éxito al ejecutar btnObtenerClimaGPS(): `,r);
+      },
+      error: (e) => console.error(`Error al ejecutar btnObtenerClimaGPS(): `,e)
+    });
     this.registro=`ion-button`;
   }
   //#endregion
 
-  //#region Calcular Fecha:
-
-  calcularFecha() {
-    this.hora = String(this.ahora.getHours()).padStart(2, '0');
-    this.minuto = String(this.ahora.getMinutes()).padStart(2, '0');
-    this.fecha = `${this.diaNom[0]} ${this.diaDelMes[0]}, ${this.hora}:${this.minuto}`;
-  }
-  //#endregion
-
-  //#region Botón Cº y Fº según GPS y según contenido del ion-searchbar:
-
-
-  //#endregion
-
   //#region Ion-Range:
 
-  /** Ion-Range - Cambiar Hora
-   * En función de la posición del botón del ion-range (.detail.value) se deseaba impactar contra la API, sin embargo
-   * no se puedo por la privatización de la función de clima horario de la misma. En su defecto, se dejará el esqueleto
-   * de cómo habría funcionado.
+  indiceIonRange:number=0; //Posición del "knob" (el pequeño botón que el usuario puede mover por la barra).
+  /**
+   * @function cambiarHoraClima - Muestra el clima por intervalos de 3 horas (limitación API) en un día.
+   * @param {Event} ev - eventos del componente.
    */
-  h:number=0;
-  onIonChange(ev: Event) {
-    this.h=Number((ev as RangeCustomEvent).detail.value);
-    if(Number(this.hora)>23) {
-      this.h=0;
-      this.hora = String(0).padStart(2, '0');
-      this.fecha = `${this.diaNom[this.btnSeleccionado]}, ${this.hora}:${this.minuto}`;
+  cambiarHoraClima(ev: Event) {
+    this.indiceIonRange=Number((ev as RangeCustomEvent).detail.value)-1;
+    if(this.indiceIonRange>-1) {
+      this.calcularPseudoMatriz(this.btnSeleccionado,this.indiceIonRange);
     }
-    else {
-      this.h++;
-      this.hora = String(this.h.toString()).padStart(2, '0');
-      this.fecha = `${this.diaNom[this.btnSeleccionado]}, ${this.hora}:${this.minuto}`;
+    console.log("Knob seleccionado en ion-range: ",this.indiceIonRange);
+  }
+
+  /**
+   * @function cambiarHoraClimaKnob0 - Cuando el Knob este en primera posición, obtiene el clima actual. 
+   * Según el registro del último control usado, la API se activa con unos parámetros u otros.
+   */
+  cambiarHoraClimaKnob0() {
+    if(this.registro==`ion-button`) {
+      this.conexClima.getURL_Coord_HoraActual(this.lat,this.long,this.unidad,this.idioma).subscribe({
+        next: (r) => {
+          this.climaActual=r;
+          console.log(`Éxito al ejecutar cambiarClimaKnob0(ion-button) y recibir datos de API: `,r);
+        },
+        error: (e) => {
+          console.log(`Error al ejecutar cambiarClimaKnob0(ion-button), no se conectó con la API: `,e);
+        }
+      });
     }
-    console.log("Ion-range: ",this.h);
-    console.log("Hora: ",this.hora);
-    console.log("Fecha: ",this.fecha);
+    else if(this.registro==`ion-searchbar`) {
+      this.conexClima.getURL_Ciudad_HoraActual(this.buscado,this.unidad,this.idioma).subscribe({
+        next: (r) => {
+          this.climaActual=r;
+          console.log(`Éxito al ejecutar cambiarClimaKnob0(ion-searchbar) y recibir datos de API: `,r);
+        },
+        error: (e) => {
+          console.log(`Error al ejecutar cambiarClimaKnob0(ion-searchbar), no se conectó con la API: `,e);
+        }
+      });
+    }
   }
   //#endregion
 
-  //#region Botones de Día por Clima:
+  //#region Botones de Día (Tarjetas de clima por día):
 
+  indicePseudoMatriz:number=0; //Debido a que la API devuelve un vector gigante, se ha tratado como matriz.
   /**
-   * 
+   * @function calcularPseudoMatriz - Trata al vector de 40 posiciones como si se tratara de una matriz de 5 x 8. 5 días y 8 intervalos horarios diarios.
+   * @param {number} fila - representa al número de días.
+   * @param {number} columna - representa al número de intervalos horarios en un día (12:00, 15:00, 18:00, 21:00... etc).
    */
-  calcularCercaniaHoraria(horaSistema:number) {
-    let masCercano = this.intervaloHoras[0];
-    let distanciaMinima = Math.abs(horaSistema - this.intervaloHoras[0]);
-
-    //Recorre el vector y encuentra el número más cercano:
-    for (let i = 0; i < 8; i++) {
-      const distancia = Math.abs(horaSistema - this.intervaloHoras[i]);
-      if (distancia < distanciaMinima) {
-          distanciaMinima = distancia;
-          masCercano = this.intervaloHoras[i];
-          this.indiceIntHor=i;
-      }
+  calcularPseudoMatriz(fila: number, columna: number) {
+    if (fila >= 0 && fila < 5 && columna >= 0 && columna < 8) {
+      this.indicePseudoMatriz = fila * 8 + columna;
     }
   }
-  //                          0, 1, 2, 3, 4, 5, 6, 7
-  intervaloHoras:number[] = [12,15,18, 21,0, 3, 6, 9];
-  indiceIntHor:number=0;
   
-  /** Cambiar el Clima según el botón de fecha a elección.
-   * En función del índice recibido como parámetro se establece la variable "btnSeleccionado" que es fundamental
-   * en clima.page.html para usarse como índice para navegar entre los vectores proporcionados por la API.
-   * Adicionalmente se reescribe la fecha.
+  /** 
+   * @function cambiarClima - Cambia el clima en función del botón de clima (día) y el knob seleccionado en el ion-range (hora).
    * @param {number} indice - "id" de cada botón. 
    */
   cambiarClima(indice: number) {
     this.btnSeleccionado = indice;
-
-    /** Posiciones del vector:
-     *  0 -  7: Día 0 -> 0 (12:00) 1 (15:00) 2 (18:00) 3 (21:00) 4 (00:00) 5 (03:00) 6 (06:00) 7 (09:00).
-     *  8 - 15: Día 1.
-     * 16 - 23: Día 2.
-     * 24 - 31: Día 3.
-     * 32 - 39: Día 4.
-     */
-    
-    switch(this.btnSeleccionado) {
-      case 0:
-        this.calcularCercaniaHoraria(Number(this.hora));
-        break;
-      case 1:
-
-        break;
-      case 2:
-
-        break;
-      case 3:
-
-        break;
-      case 4:
-
-        break;
-    }
-    this.fecha = `${this.diaNom[this.btnSeleccionado]} ${this.diaDelMes[this.btnSeleccionado]}, ${this.hora}:${this.minuto}`;
+    this.calcularPseudoMatriz(indice,this.indiceIonRange);
   }
   //#endregion
 }
