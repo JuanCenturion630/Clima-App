@@ -1,14 +1,3 @@
-/* No funciona el modo claro/oscuro
-  body {
-  background-color: var(--background-color-light);
-  color: var(--text-color-light);
-}
-.dark-theme { //Estilos específicos para el modo oscuro
-  body {
-    background-color: var(--background-color-dark);
-    color: var(--text-color-dark);
-  }
-}*/
 .tituloEncabezado {
   margin-left: 28%;
   //Elegir fuentes más estéticas.
@@ -49,10 +38,10 @@ ion-searchbar {
   color: #ffffff;
   //font-weight: bold;
 }
-.cuadroClima {
-  //border: 1px solid grey;
-  //box-shadow: 0 4px 6px rgba(255, 255, 255, 1.0);
-}
+/*.cuadroClima {
+  border: 1px solid grey;
+  box-shadow: 0 4px 6px rgba(255, 255, 255, 1.0);
+}*/
 .cuadroClimaIcono {
   //border: 1px solid grey;
   width: 80px;
@@ -90,9 +79,14 @@ ion-range {
   --knob-background:#0080ff;
   --knob-border-radius: 0;
 }
+.botonAhora {
+  --color: #818283;
+  --border-width: 0px;
+  margin-left: -08px;
+}
 .botonDia {
   width: 97%;
-  height: 295px;
+  height: 255px;
   margin-left: 5px;
   --color: #ffffff;
   --border-width: 2px;

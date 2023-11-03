@@ -10,7 +10,7 @@
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
     
     <!--Botón para Cambiar de Celsius a Farenheite y viceversa-->
-    <ion-button fill="outline" (click)="sistemaMetrico()"(click)="cerrarMenu()">
+    <ion-button fill="outline" (click)="sistemaMetrico()" (click)="cerrarMenu()">
       <ion-icon slot="start" name="partly-sunny"></ion-icon>
       {{ btnNom }}
     </ion-button>
@@ -24,11 +24,6 @@
     </ion-button>
 
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
-    
-    <!--ion-button (click)="toggleTheme()" fill="outline">
-      <ion-icon slot="start" name="sunny"></ion-icon>
-      Modo claro
-    </ion-button-->
   </ion-content>
 </ion-menu>
 
@@ -46,62 +41,68 @@
   <!--Barra de búsqueda-->
   <ion-toolbar>
     <!--Explicación de los parámetros usados en el ion-searchbar:
-      "ngModel" escribir sobre la variable (definida en clima.page.ts).
-      "ionChange" evento que se activa al cambiar el valor de la barra de búsqueda e invoca un método.
       "placeholder" es la marca de agua sobre el control.
-      "debounce" es la cantidad de milisegundos de espera antes del evento IonInput.
+      "ngModel" la variable se usa como parámetro para pasar a un método.
+      "ionChange" evento que se activa al cambiar el valor de la barra de búsqueda e invoca un método.
       "IonInput" la entrada del control se pasa como parámetro del método definido en clima.page.ts.
+      "debounce" es la cantidad de milisegundos de espera antes del evento IonInput.
       "click" espera a un clic sobre el control para activar un método en clima.page.ts.
       "expand" expande al máximo la lista traida por el método recibido en "click".
     -->
     <!--Datos extras sobre los parámetros usados en el ion-searchbar:
       "$event" es obligatorio, traslada "searchText" y "searchQuery" como parámetro de los métodos invocados.
-      (ionInput)="detectarEnter($event)" no funciona.
     -->
     <ion-searchbar placeholder="Ingrese una ciudad" 
-      [(ngModel)]="searchText" (ionChange)="sbarObtenerClimaCiudad($event)" 
-      [(ngModel)]="searchQuery" (ionInput)="filtrarElemento($event)" [debounce]="1000"
-      (click)="mostrarLista()" expand="full"
-      (keyup)="detectarEnter($event)">
+      [(ngModel)]="ciudadEscrita" (keyup)="detectarEnter($event)" 
+      [(ngModel)]="ciudadSugerida" (ionInput)="filtrarElemento($event)" [debounce]="1000"
+      (click)="mostrarLista()" expand="full">
     </ion-searchbar>
 
     <!--Explicacion parámetros usados en ion-list:
-      "ngClass" permite la implementación de clases de distintas páginas, como
-      "hidden-list" de clima.page.css y "isListVisible" de clima.page.ts.
-      "ngFor" inicia un bucle for con Angular.
-      "let result of results" imprime los resultados del vector recorrido por el for.
+      "ngClass" permite la conexión elementos de varias páginas a la vez, como "hidden-list" de clima.page.css y 
+      "isListVisible" de clima.page.ts.
+      "ngFor" inicia un bucle For con Angular Pipe.
     -->
     <!--Datos extras de los parámetros usados en ion-list:
-      "results", a pesar de ser definida por el desarrollador, debe llamarse obligatoriamente así para activar el 
-      "let result of results"
+      Se utilizó un For Of con Angular Pipe "*ngFor=let ciudad of ciudades" y la variable "ciudad" que funciona como
+      índice debe estar siempre en singular en relación con el nombre del vector "ciudades".
     -->
-    <!--ion-list [ngClass]="{ 'mostrarLista-style': !listaVisible }">
-      <ion-item *ngFor="let result of results" (click)="setSearchQuery(result)" (click)="mostrarLista()">
-        <ion-label>{{ result }}</ion-label>
+    <ion-list [ngClass]="{ 'mostrarLista-style': !listaVisible }">
+      <ion-item *ngFor="let ciudad of ciudades" (click)="copiarCiudadSugerida(ciudad)" (click)="mostrarLista()">
+        <ion-label>{{ ciudad }}</ion-label>
       </ion-item>
-    </ion-list-->
+    </ion-list>
   </ion-toolbar>
 
   <div style="margin-top: 2px;"></div> <!--Espaciado-->
 
-  <!--Nombre ciudad y botón GPS-->
+  <!--Resultado para... y botón GPS-->
   <ion-toolbar>
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
-    <!--Nombre ciudad-->
-    <ion-label *ngIf="clima" class="desviarDerecha">
+    
+    <!--Nombre ciudad (clima por intervalos)-->
+    <ion-label *ngIf="clima && !estadoBtnClimaActual" class="desviarDerecha">
       <span class="opaco">Resultados para </span>
       <span class="negrita">{{clima.city.name}}, {{clima.city.country}}</span>
     </ion-label>
 
+    <!--Nombre ciudad (clima por hora actual)-->
+    <ion-label *ngIf="climaActual && estadoBtnClimaActual" class="desviarDerecha">
+      <span class="opaco">Resultados para </span>
+      <span class="negrita">{{climaActual.name}}, {{climaActual.sys.country}}</span>
+    </ion-label>
+
     <!--Botón GPS
-      "shape" forma del botón.
-      "size" tamaño del botón.
-      "fill" rellenado del botón.
-      "class" implementa estilos CSS.
-      "click" evento que se activa al hacer click y ejecuta un método.
+      "shape": forma del botón.
+      "size": tamaño del botón.
+      "fill": rellenado del botón.
+      "class": implementa estilos CSS.
+      "click": evento que se activa al hacer click y ejecuta un método.
+      "slot": posición del icono del botón.
+      "name": imagen del icono del botón.
     -->
     <ion-button shape="round" size="small" fill="outline" 
-      class="botonGPS" (click)="btnObtenerClimaGPS()">
+      class="botonGPS" (click)="btnObtenerClimaGPS(lat,long,unidad,idioma)">
       <ion-icon slot="start" name="earth-outline"></ion-icon>
       Usar ubicación precisa
     </ion-button>
@@ -110,44 +111,52 @@
 
   <div style="margin-top: 2px;"></div> <!--Espaciado-->
 
-  <!--Tarjeta del clima seleccionado-->
+  <!--Datos generales del clima-->
   <ion-toolbar>
     <!--Título-->
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
     <ion-label class="desviarDerecha masTamanio">Clima</ion-label>
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
 
-    <!--Fecha y breve descripción del clima-->
-    <ion-label *ngIf="clima" class="desviarDerecha opaco">
+    <!--Fecha y breve descripción (clima por intervalos)-->
+    <ion-label *ngIf="clima && !estadoBtnClimaActual" class="desviarDerecha opaco">
       <!--Descripción de las funciones Pipe Angular:
         ".dt": recibe el tiempo en formato UNIX UTC, es decir, como un contador de milisegundos en tiempo universal.
         "*1000": se hace para pasar de milisegundos a segundos.
         "-(3*60*60*1000)": se hace para pasar de horario UTC (tiempo universal) a GTM-3 (hora Argentina).
-        "|": se usa para someter a funciones a la variable clima.list[].dt.
-        "date": función date para formatear la fecha a "dom, 29 Oct. 08:33"
-        "titlecase": función string para pasar a mayúsculas la primera letra del tiempo formateado: "dom"->"Dom".
+        "|": la variable clima.list[].dt pasa como parámetro a la función "date".
+        "date": función date para formatear la fecha a "dom, 29 oct. 08:33"
+        "titlecase": función string para pasar a mayúsculas la primera letra de todas las palabras.
+        "charAt(0).toUpperCase()": el caracter 0 pasa a mayúscula.
+        "slice(1).toLowerCase()": desde el caracter 1 pasa a minúsculas.
       -->
-      {{(clima.list[indicePseudoMatriz].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM. HH:mm':'UTC':'es' | titlecase}}. {{clima.list[indicePseudoMatriz].weather[0].description | titlecase}}.
+      {{(clima.list[indicePseudoMatriz].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM. HH:mm':'UTC':'es' | titlecase}} | 
+      {{clima.list[indicePseudoMatriz].weather[0].description.charAt(0).toUpperCase() + clima.list[indicePseudoMatriz].weather[0].description.slice(1).toLowerCase()}}
+    </ion-label>
+
+    <!--Fecha y breve descripción (clima por hora actual)-->
+    <ion-label *ngIf="climaActual && estadoBtnClimaActual" class="desviarDerecha opaco">
+      {{(climaActual.dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM. HH:mm':'UTC':'es' | titlecase}} | 
+      {{climaActual.weather[0].description.charAt(0).toUpperCase() + climaActual.weather[0].description.slice(1).toLowerCase()}}
     </ion-label>
 
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
 
-    <!--Temperatura, icono y datos de presión, humedad y viento...-->
-    <ion-card>
-      <ion-card-content class="">
-        <!--Imagen del clima--> <!--{{clima.list[0].weather[0].icon}}-->
-        <img class="imagenClima" *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[indicePseudoMatriz].weather[0].icon + '@2x.png'"/>
+    <!--Temperatura principal, icono y extras (clima por intervalos)-->
+    <ion-card *ngIf="clima && !estadoBtnClimaActual">
+      <ion-card-content>
+        <!--Imagen del clima-->
+        <img class="imagenClima" [src]="'https://openweathermap.org/img/wn/'+clima.list[indicePseudoMatriz].weather[0].icon+'@2x.png'"/>
         
         <!--Cifra del clima-->
         <ion-card-content class="cuadroClimaTemp">
-          <ion-label *ngIf="clima" class="esteticaCifraClima">{{clima.list[indicePseudoMatriz].main.temp | number: '1.0-0'}}{{sm}}</ion-label>
+          <ion-label class="esteticaCifraClima">{{clima.list[indicePseudoMatriz].main.temp | number: '1.0-0'}}{{sm}}</ion-label>
         </ion-card-content>
         
-        <!--Presión, humedad y viento-->
-        <!--ion-row imprime un renglón en pantalla-->
+        <!--Nubes, humedad y viento-->
         <ion-card-content class="cuadroClimaExtras">
-          <ion-label *ngIf="clima">
-            Precip.: {{clima.list[indicePseudoMatriz].pop*100 | number: '1.0-0'}}%
+          <ion-label>
+            Nubes: {{clima.list[indicePseudoMatriz].clouds.all}}%
             <ion-row>Humedad: {{clima.list[indicePseudoMatriz].main.humidity}}%</ion-row>
             <ion-row>Viento: {{clima.list[indicePseudoMatriz].wind.speed}} {{viento}}</ion-row>
           </ion-label>
@@ -155,27 +164,46 @@
       </ion-card-content>
     </ion-card>
 
-    <!--Barra de clima por horas-->
+    <!--Temperatura principal, icono y extras (clima por hora actual)-->
+    <ion-card *ngIf="climaActual && estadoBtnClimaActual">
+      <ion-card-content>
+        <!--Imagen del clima-->
+        <img class="imagenClima" [src]="'https://openweathermap.org/img/wn/'+climaActual.weather[0].icon+'@2x.png'"/>
+        
+        <!--Cifra del clima-->
+        <ion-card-content class="cuadroClimaTemp">
+          <ion-label class="esteticaCifraClima">{{climaActual.main.temp | number: '1.0-0'}}{{sm}}</ion-label>
+        </ion-card-content>
+        
+        <!--Nubes, humedad y viento-->
+        <ion-card-content class="cuadroClimaExtras">
+          <ion-label>
+            Nubes: {{climaActual.clouds.all}}%
+            <ion-row>Humedad: {{climaActual.main.humidity}}%</ion-row>
+            <ion-row>Viento: {{climaActual.wind.speed}} {{viento}}</ion-row>
+          </ion-label>
+        </ion-card-content>
+      </ion-card-content>
+    </ion-card>
+
+    <!--Botón de clima actual/clima por intervalos y barra de horas-->
     <ion-card>
-      <ion-card-content class="bordeCardContent">
-        <ion-range 
-          labelPlacement="stacked"  
-          label="Hora:" 
-          [ticks]="true" 
-          [snaps]="true" 
-          [min]="0" 
-          [max]="7" 
-          (ionChange)="cambiarHoraClima($event)"
-          (ionKnobMoveStart)="cambiarHoraClimaKnob0()">
-        </ion-range>
+      <ion-card-content>
+        <!--Botón de clima actual/clima por intervalos-->
+        <ion-button size="small" fill="outline" class="botonAhora" (click)="btnClimaActual(registro)">
+          <ion-icon slot="start" name="time-outline"></ion-icon>
+          {{nomBtnClimaActual}}
+        </ion-button>
+        <!--Barra de horas-->
+        <ion-range [disabled]="estadoBtnClimaActual" [ticks]="true" [snaps]="true" [min]="0" [max]="7" (ionChange)="cambiarHoraClima($event)"></ion-range>
       </ion-card-content>
     </ion-card>
 
     <div style="margin-top: 5px;"></div>
   </ion-toolbar>
 
-  <!--Carousel Slide (Bootstrap) con Ionic para crear crear vistas desplazantes con el clima semanal-->
-  <ion-toolbar>
+  <!--Carousel Slide (Bootstrap) con Ionic para crear crear vistas desplazantes con el clima por 5 días-->
+  <ion-toolbar *ngIf="clima && !estadoBtnClimaActual">
     <div class="container">
       <div id="carouselClima" class="carousel slide"> <!--data-bs-ride="carousel" desplazamiento automático-->
         <!--Carrusel-->
@@ -183,80 +211,41 @@
           <!--1º Slide-->
           <div class="carousel-item active">
             <!--1º Tarjeta de clima-->
-            <ion-button fill="outline" class="botonDia" (click)="cambiarClima(0)">
-              <ion-label *ngIf="clima" style="margin-top: 5px;">
-                {{(clima.list[0].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
+            <ion-button fill="outline" class="botonDia" (click)="cambiarClima(cci)">
+              <ion-label style="margin-top: 5px;">
+                {{(clima.list[indicePseudoMatriz].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
                 <ion-row>
-                  <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[indicePseudoMatriz].weather[0].icon + '@2x.png'"/>
+                  <img [src]="'https://openweathermap.org/img/wn/'+clima.list[indicePseudoMatriz].weather[0].icon+'@2x.png'"/>
                 </ion-row>
-                <ion-row style="margin-top: 3px;">{{clima.list[indicePseudoMatriz].main.temp_max}}º.</ion-row>
-                <ion-row>{{clima.list[indicePseudoMatriz].main.temp_min}}º.</ion-row>
-              </ion-label>
-            </ion-button>
-          </div>
-          <!--2º Slide-->
-          <div class="carousel-item">
-            <ion-button fill="outline" class="botonDia" (click)="cambiarClima(1)">
-              <ion-label *ngIf="clima" style="margin-top: 5px;">
-                {{(clima.list[8].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
-                <ion-row>
-                  <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[indicePseudoMatriz].weather[0].icon + '@2x.png'"/>
-                </ion-row>
-                <ion-row style="margin-top: 3px;">{{clima.list[indicePseudoMatriz].main.temp_max}}º.</ion-row>
-                <ion-row>{{clima.list[indicePseudoMatriz].main.temp_min}}º.</ion-row>
-              </ion-label>
-            </ion-button>
-          </div>
-          <!--3º Slide-->
-          <div class="carousel-item">
-            <ion-button fill="outline" class="botonDia" (click)="cambiarClima(2)">
-              <ion-label *ngIf="clima" style="margin-top: 5px;">
-                {{(clima.list[16].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
-                <ion-row>
-                  <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[indicePseudoMatriz].weather[0].icon + '@2x.png'"/>
-                </ion-row>
-                <ion-row style="margin-top: 3px;">{{clima.list[indicePseudoMatriz].main.temp_max}}º.</ion-row>
-                <ion-row>{{clima.list[indicePseudoMatriz].main.temp_min}}º.</ion-row>
-              </ion-label>
-            </ion-button>
-          </div>
-          <!--4º Slide-->
-          <div class="carousel-item">
-            <ion-button fill="outline" class="botonDia" (click)="cambiarClima(3)">
-              <ion-label *ngIf="clima" style="margin-top: 5px;">
-                {{(clima.list[24].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
-                <ion-row>
-                  <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[indicePseudoMatriz].weather[0].icon + '@2x.png'"/>
-                </ion-row>
-                <ion-row style="margin-top: 3px;">{{clima.list[indicePseudoMatriz].main.temp_max}}º.</ion-row>
-                <ion-row>{{clima.list[indicePseudoMatriz].main.temp_min}}º.</ion-row>
-              </ion-label>
-            </ion-button>
-          </div>
-          <!--5º Slide-->
-          <div class="carousel-item">
-            <ion-button fill="outline" class="botonDia" (click)="cambiarClima(4)">
-              <ion-label *ngIf="clima" style="margin-top: 5px;">
-                {{(clima.list[32].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
-                <ion-row>
-                  <img *ngIf="clima" [src]="'https://openweathermap.org/img/wn/' + clima.list[indicePseudoMatriz].weather[0].icon + '@2x.png'"/>
-                </ion-row>
-                <ion-row style="margin-top: 3px;">{{clima.list[indicePseudoMatriz].main.temp_max}}º.</ion-row>
-                <ion-row>{{clima.list[indicePseudoMatriz].main.temp_min}}º.</ion-row>
+                <ion-row style="margin-top: 3px;">{{clima.list[indicePseudoMatriz].main.temp_max}}{{sm}}</ion-row>
+                <ion-row>{{clima.list[indicePseudoMatriz].main.temp_min}}{{sm}}</ion-row>
               </ion-label>
             </ion-button>
           </div>
         </div>
 
-        <button class="carousel-control-prev" type="button" data-bs-target="#carouselClima" data-bs-slide="prev">
+        <!--Botón Atrás-->
+        <button (click)="restarContador()" (click)="cambiarClima(cci)" class="carousel-control-prev" type="button" 
+          data-bs-target="#carouselClima" data-bs-slide="prev">
           <span class="carousel-control-prev-icon" aria-hidden="true"></span>
           <span class="visually-hidden">Atrás</span>
         </button>
-        <button class="carousel-control-next" type="button" data-bs-target="#carouselClima" data-bs-slide="next">
+        <!--Botón Siguiente-->
+        <button (click)="sumarContador()" (click)="cambiarClima(cci)" class="carousel-control-next" type="button" 
+          data-bs-target="#carouselClima" data-bs-slide="next">
           <span class="carousel-control-next-icon" aria-hidden="true"></span>
           <span class="visually-hidden">Siguiente</span>
         </button>
       </div>
+    </div>
+    <div style="margin-top: 7px;"></div> <!--Espaciado-->
+  </ion-toolbar>
+
+  <!--Tarjeta del clima por intervalos deshabilitada cuando está el clima actual-->
+  <ion-toolbar *ngIf="climaActual && estadoBtnClimaActual">
+    <div class="container">
+      <ion-button fill="outline" class="botonDia">
+      </ion-button>
     </div>
     <div style="margin-top: 7px;"></div> <!--Espaciado-->
   </ion-toolbar>
