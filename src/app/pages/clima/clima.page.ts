@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ClimaService } from 'src/app/services/clima.service';
 import { ActivatedRoute } from '@angular/router';
 import { RangeCustomEvent } from '@ionic/angular';
@@ -6,6 +6,7 @@ import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
 import { MenuController } from '@ionic/angular';
 import { AlertController } from '@ionic/angular';
+import { FirestoreService } from 'src/app/services/firestore.service';
 
 @Component({
   selector: 'app-clima',
@@ -13,7 +14,7 @@ import { AlertController } from '@ionic/angular';
   styleUrls: ['./clima.page.scss'],
 })
 
-export class ClimaPage {
+export class ClimaPage implements OnInit {
   clima!:any; //Recibe datos de la API climática en modo "5 días/3 horas". Recibe los datos de cinco días divididos en intervalos predefinidos de tres horas.
   climaActual!:any; //Recibe datos de la API climática en su modo "actual". Recibe los datos de la hora presente.
   geoCodificacion!:any; //Recibe datos de la API de geocodificación, convierte direcciones en coordenadas.
@@ -24,9 +25,9 @@ export class ClimaPage {
   registro:string=`ion-button`; //Lleva un registro de cuál fue el último componente que recibió clic.
   iconURL:string=''; //Recibe iconos de la API climática.
 
-  constructor(private conexClima:ClimaService, private route:ActivatedRoute, 
-    private authService:AuthService,private router: Router, 
-    private menu: MenuController,private alertController: AlertController /*private storage:Storage*/) {
+  constructor(private conexClima:ClimaService, private route:ActivatedRoute,private authService:AuthService,
+    private router: Router, private menu: MenuController,private alertController: AlertController,
+    private firestore: FirestoreService /*private storage:Storage*/) {
     //#region Recupera las coordenadas de Login, las imprime en consola y obtiene el clima:
 
     this.lat =+this.route.snapshot.queryParams['lat'];
@@ -35,6 +36,18 @@ export class ClimaPage {
     console.log("Longitud en clima.page.ts: " + this.long);
     this.btnClimaActual(this.registro);
     //#endregion
+  }
+
+  ngOnInit() {
+    const uid: string = localStorage.getItem('uid') || "";
+    if(uid != ""){
+      this.firestore.getUsuario(uid).subscribe((data) => {
+        const usuarioData: any = data.payload.data();
+        if (usuarioData) {
+          this.ciudades = usuarioData.ciudadesFavoritas;
+        }
+      });
+    }
   }
 
   //#region Notificación de errores:
@@ -169,16 +182,16 @@ export class ClimaPage {
 
   ciudadEscrita: string = ''; //Recibe la ciudad escrita por el usuario en la barra de búsqueda.
   public ciudades = [ //Sugerencias para la lista de la barra de búsqueda.
-    'Buenos Aires, AR',
-    'La Plata, AR',
-    'Rosario, AR',
-    'Montevideo, UY',
-    'Santiago de Chile, CL',
-    'Río de Janeiro, BR',
-    'Brasilia, BR',
-    'La Paz, BO',
-    'Asunción, PY',
-    'Lima, PE',
+    'Buenos Aires',
+    'La Plata',
+    'Rosario',
+    'Montevideo',
+    'Santiago de Chile',
+    'Río de Janeiro',
+    'Brasilia',
+    'La Paz',
+    'Asunción',
+    'Lima',
   ];
   
   /**
@@ -229,8 +242,25 @@ export class ClimaPage {
    * @param {any} evento - Variable indefinida para recibir eventos del componente.
    */
   filtrarElemento(evento:any) {
-    const buscado = evento.target.value.toLowerCase();
-    this.ciudades = this.ciudades.filter((c) => c.toLowerCase().indexOf(buscado) > -1);
+    //const buscado = evento.target.value.toLowerCase();
+    //this.ciudades = this.ciudades.filter((c) => c.toLowerCase().indexOf(buscado) > -1);
+    const nombreCiudad=evento.target.value;
+    let nombreCiudadEnMayusculas: string = nombreCiudad.toUpperCase();
+    let ciudadesEnMayusculas = this.ciudades.map(ciudad => ciudad.toUpperCase());
+    
+    if (nombreCiudadEnMayusculas.trim().length > 0 && !ciudadesEnMayusculas.includes(nombreCiudadEnMayusculas.trim())) {
+      const uid: string = localStorage.getItem('uid') || "";
+      if (uid != "") {
+        this.ciudades.unshift(nombreCiudad);
+        if (this.ciudades.length > 10) {
+          this.ciudades.pop();
+        }
+        let data = {
+          ciudadesFavoritas: this.ciudades
+        }
+        this.firestore.actualizarUsuario(uid, data);
+      }
+    }
   }
 
   ciudadSugerida: string = ''; //Texto copiado del ion-list al ion-searchbar.

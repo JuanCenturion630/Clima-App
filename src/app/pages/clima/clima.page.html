@@ -234,12 +234,12 @@
           <!--1º Slide-->
           <div class="carousel-item active">
             <ion-button fill="outline" class="botonDia">
-              <ion-label style="margin-top: 3px;">
+              <ion-label style="margin-top: 5px;">
                 {{(clima.list[0*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
                 <ion-row>
                   <img [src]="'https://openweathermap.org/img/wn/'+clima.list[0*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
                 </ion-row>
-                <ion-row style="margin-top: -5px;">{{clima.list[0*8+indiceIonRange].main.temp_max}}{{sm}}</ion-row>
+                <ion-row style="margin-top: 3px;">{{clima.list[0*8+indiceIonRange].main.temp_max}}{{sm}}</ion-row>
                 <ion-row>{{clima.list[0*8+indiceIonRange].main.temp_min}}{{sm}}</ion-row>
               </ion-label>
             </ion-button>
