@@ -50,7 +50,7 @@
       "expand" expande al máximo la lista traida por el método recibido en "click".
     -->
     <!--Datos extras sobre los parámetros usados en el ion-searchbar:
-      "$event" es obligatorio, traslada "searchText" y "searchQuery" como parámetro de los métodos invocados.
+      "$event" es obligatorio, traslada "ciudadEscrita" y "ciudadSugerida" como parámetro de los métodos invocados.
     -->
     <ion-searchbar placeholder="Ingrese una ciudad" 
       [(ngModel)]="ciudadEscrita" (keyup)="detectarEnter($event)" 
@@ -205,34 +205,109 @@
   <!--Carousel Slide (Bootstrap) con Ionic para crear crear vistas desplazantes con el clima por 5 días-->
   <ion-toolbar *ngIf="clima && !estadoBtnClimaActual">
     <div class="container">
-      <div id="carouselClima" class="carousel slide"> <!--data-bs-ride="carousel" desplazamiento automático-->
+      <!--data-bs-ride="carousel": desplazamiento automático/data-bs-touch="false": desactiva desplazamiento tactil-->
+      <div id="carouselClima" class="carousel slide" data-bs-touch="false">
+        <!--EXPLICACIÓN:
+          Ej.: Si el tercer "carousel-indicators" es presionado, se invoca "calcularPseudoMatriz" con su fila
+          establecida en 2 y su columna con un número dinámico en función del knob del ion-range (barra de horas). 
+          De esta forma el clima cambia al presionar un "carousel-indicators".
+
+          Además se establece con "setContador" el valor de cci (contador carousel item) en 2, ya que se usa para
+          el método "cambiarHoraClima()" en el ion-range. De esta forma el clima cambia al presionar un knob de la 
+          barra de horas. 
+        -->
+        <!--Botones por slide-->
+        <div class="carousel-indicators">
+          <button (click)="calcularPseudoMatriz(0,indiceIonRange)" (click)="setContador(0)" type="button" data-bs-target="#carouselClima" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+          <button (click)="calcularPseudoMatriz(1,indiceIonRange)" (click)="setContador(1)" type="button" data-bs-target="#carouselClima" data-bs-slide-to="1" aria-label="Slide 2"></button>
+          <button (click)="calcularPseudoMatriz(2,indiceIonRange)" (click)="setContador(2)" type="button" data-bs-target="#carouselClima" data-bs-slide-to="2" aria-label="Slide 3"></button>
+          <button (click)="calcularPseudoMatriz(3,indiceIonRange)" (click)="setContador(3)" type="button" data-bs-target="#carouselClima" data-bs-slide-to="3" aria-label="Slide 4"></button>
+          <button (click)="calcularPseudoMatriz(4,indiceIonRange)" (click)="setContador(4)" type="button" data-bs-target="#carouselClima" data-bs-slide-to="4" aria-label="Slide 5"></button>
+        </div>
+        <!--EXPLICACIÓN:
+          '0*8+indiceIonRange' significa: fila 0 [día 1] * 8 intervalos totales + intervalo 0, 1, 2...
+          De esta forma se mueve por la pseudomatriz de 5x8 que en realidad es un vector de 40 posiciones por
+          limitaciones de la API. Ej.: 2*8+5 es 21 que significa: 'día 3, 6º intervalo horario'.
+        -->
         <!--Carrusel-->
         <div class="carousel-inner">
           <!--1º Slide-->
           <div class="carousel-item active">
-            <!--1º Tarjeta de clima-->
-            <ion-button fill="outline" class="botonDia" (click)="cambiarClima(cci)">
-              <ion-label style="margin-top: 5px;">
-                {{(clima.list[indicePseudoMatriz].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
+            <ion-button fill="outline" class="botonDia">
+              <ion-label style="margin-top: 3px;">
+                {{(clima.list[0*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
                 <ion-row>
-                  <img [src]="'https://openweathermap.org/img/wn/'+clima.list[indicePseudoMatriz].weather[0].icon+'@2x.png'"/>
+                  <img [src]="'https://openweathermap.org/img/wn/'+clima.list[0*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
                 </ion-row>
-                <ion-row style="margin-top: 3px;">{{clima.list[indicePseudoMatriz].main.temp_max}}{{sm}}</ion-row>
-                <ion-row>{{clima.list[indicePseudoMatriz].main.temp_min}}{{sm}}</ion-row>
+                <ion-row style="margin-top: -5px;">{{clima.list[0*8+indiceIonRange].main.temp_max}}{{sm}}</ion-row>
+                <ion-row>{{clima.list[0*8+indiceIonRange].main.temp_min}}{{sm}}</ion-row>
+              </ion-label>
+            </ion-button>
+          </div>
+
+          <!--2º Slide-->
+          <div class="carousel-item">
+            <ion-button fill="outline" class="botonDia">
+              <ion-label style="margin-top: 5px;">
+                {{(clima.list[1*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
+                <ion-row>
+                  <img [src]="'https://openweathermap.org/img/wn/'+clima.list[1*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
+                </ion-row>
+                <ion-row style="margin-top: 3px;">{{clima.list[1*8+indiceIonRange].main.temp_max}}{{sm}}</ion-row>
+                <ion-row>{{clima.list[1*8+indiceIonRange].main.temp_min}}{{sm}}</ion-row>
+              </ion-label>
+            </ion-button>
+          </div>
+
+          <!--3º Slide-->
+          <div class="carousel-item">
+            <ion-button fill="outline" class="botonDia">
+              <ion-label style="margin-top: 5px;">
+                {{(clima.list[2*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
+                <ion-row>
+                  <img [src]="'https://openweathermap.org/img/wn/'+clima.list[2*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
+                </ion-row>
+                <ion-row style="margin-top: 3px;">{{clima.list[2*8+indiceIonRange].main.temp_max}}{{sm}}</ion-row>
+                <ion-row>{{clima.list[2*8+indiceIonRange].main.temp_min}}{{sm}}</ion-row>
+              </ion-label>
+            </ion-button>
+          </div>
+
+          <!--4º Slide-->
+          <div class="carousel-item">
+            <ion-button fill="outline" class="botonDia">
+              <ion-label style="margin-top: 5px;">
+                {{(clima.list[3*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
+                <ion-row>
+                  <img [src]="'https://openweathermap.org/img/wn/'+clima.list[3*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
+                </ion-row>
+                <ion-row style="margin-top: 3px;">{{clima.list[3*8+indiceIonRange].main.temp_max}}{{sm}}</ion-row>
+                <ion-row>{{clima.list[3*8+indiceIonRange].main.temp_min}}{{sm}}</ion-row>
+              </ion-label>
+            </ion-button>
+          </div>
+
+          <!--5º Slide-->
+          <div class="carousel-item">
+            <ion-button fill="outline" class="botonDia">
+              <ion-label style="margin-top: 5px;">
+                {{(clima.list[4*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
+                <ion-row>
+                  <img [src]="'https://openweathermap.org/img/wn/'+clima.list[4*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
+                </ion-row>
+                <ion-row style="margin-top: 3px;">{{clima.list[4*8+indiceIonRange].main.temp_max}}{{sm}}</ion-row>
+                <ion-row>{{clima.list[4*8+indiceIonRange].main.temp_min}}{{sm}}</ion-row>
               </ion-label>
             </ion-button>
           </div>
         </div>
-
         <!--Botón Atrás-->
-        <button (click)="restarContador()" (click)="cambiarClima(cci)" class="carousel-control-prev" type="button" 
-          data-bs-target="#carouselClima" data-bs-slide="prev">
+        <button (click)="restarContador()" class="carousel-control-prev" type="button" data-bs-target="#carouselClima" data-bs-slide="prev">
           <span class="carousel-control-prev-icon" aria-hidden="true"></span>
           <span class="visually-hidden">Atrás</span>
         </button>
         <!--Botón Siguiente-->
-        <button (click)="sumarContador()" (click)="cambiarClima(cci)" class="carousel-control-next" type="button" 
-          data-bs-target="#carouselClima" data-bs-slide="next">
+        <button (click)="sumarContador()" class="carousel-control-next" type="button" data-bs-target="#carouselClima" data-bs-slide="next">
           <span class="carousel-control-next-icon" aria-hidden="true"></span>
           <span class="visually-hidden">Siguiente</span>
         </button>

@@ -1,3 +1,16 @@
 <ion-app>
-  <ion-router-outlet></ion-router-outlet>
+  <ion-router-outlet>
+    <ion-tabs>
+      <ion-tab-bar slot="bottom" *ngIf="paginaActual === '/clima' || paginaActual === '/mapa'">
+        <ion-tab-button tab="clima">
+          <ion-icon name="partly-sunny-sharp"></ion-icon>
+          Clima
+        </ion-tab-button>
+        <ion-tab-button tab="mapa">
+          <ion-icon name="location-sharp"></ion-icon>
+          Mapa
+        </ion-tab-button>
+      </ion-tab-bar>
+    </ion-tabs>
+  </ion-router-outlet>
 </ion-app>

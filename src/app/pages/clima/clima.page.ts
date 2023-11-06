@@ -14,15 +14,15 @@ import { AlertController } from '@ionic/angular';
 })
 
 export class ClimaPage {
-  clima!:any; //Variable sin tipo, recibe datos de la API en modo "5 días/3 horas". Recibe los datos de cinco días divididos en intervalos de tres horas.
-  climaActual!:any; //Variable sin tipo, recibe datos de la API en su modo "actual". Recibe los datos de la hora presente.
-  lat:number=0; //Latitud del dispositivo.
-  long:number=0; //Longitud del dispositivo.
-  btnSeleccionado:number=0; //Id de los botones de cambio de clima.
-  unidad:string=`metric`; //Parámetro para la API refiriéndose al sistema métrico decimal.
-  idioma:string=`es`; //Parámetro para la API refiriéndose al español.
-  registro:string=`ion-button`; //Lleva un registro de cuál fue el último componente que recibió click.
-  iconURL:string=''; //Recibe iconos de la API.
+  clima!:any; //Recibe datos de la API climática en modo "5 días/3 horas". Recibe los datos de cinco días divididos en intervalos predefinidos de tres horas.
+  climaActual!:any; //Recibe datos de la API climática en su modo "actual". Recibe los datos de la hora presente.
+  geoCodificacion!:any; //Recibe datos de la API de geocodificación, convierte direcciones en coordenadas.
+  lat:number=0; //Latitud.
+  long:number=0; //Longitud.
+  unidad:string=`metric`; //Parámetro para la API climática refiriéndose al sistema métrico decimal.
+  idioma:string=`es`; //Parámetro para la API climática refiriéndose al español.
+  registro:string=`ion-button`; //Lleva un registro de cuál fue el último componente que recibió clic.
+  iconURL:string=''; //Recibe iconos de la API climática.
 
   constructor(private conexClima:ClimaService, private route:ActivatedRoute, 
     private authService:AuthService,private router: Router, 
@@ -37,12 +37,56 @@ export class ClimaPage {
     //#endregion
   }
 
+  //#region Notificación de errores:
+
+  /**
+   * @function notificarError - muestra mensajes emergentes de error al usuario.
+   * @param e - error generado por los métodos suscribe durante el llamado a las APIs.
+   */
+  notificarError(e:any) {
+    if(e.status==400 || e.status==404) {
+      console.error(`Error ${e.status} (${e.statusText}). No se encontraron resultados.`,e);
+      this.alertaNoEncontrado();
+    }
+    else if(e.status==0) {
+      console.log(`Error ${e.status} (${e.statusText}). Se perdió la conexión con internet.`,e);
+      this.alertaFallaConexion();
+    }
+  }
+
+  /**
+   * @function alertaNoEncontrado - Crea un mensaje emergente notificando una búsqueda no encontrada.
+   */
+  async alertaNoEncontrado() {
+    const alert = await this.alertController.create({
+      header: 'Error',
+      subHeader: 'No se ha encontrado el elemento',
+      message: 'Los datos solicitados no se encuentran en nuestro servicio.',
+      buttons: ['OK'],
+    });
+    await alert.present();
+  }
+
+  /**
+   * @function alertaFallaConexion - Crea un mensaje emergente notificando la ausencia de conexión.
+   */
+  async alertaFallaConexion() {
+    const alert = await this.alertController.create({
+      header: 'Error',
+      subHeader: 'Conexión no establecida',
+      message: 'Espera unos momentos o revisa tu conexión a internet.',
+      buttons: ['OK'],
+    });
+    await alert.present();
+  }
+  //#endregion
+
   //#region Botón Clima Hora Actual:
   
   nomBtnClimaActual:string=`CALCULAR CLIMA ACTUAL`;
-  estadoBtnClimaActual:boolean=false; //En función de su estado se imprime en pantalla "clima": vector de 40 posiciones, o "climaActual": un único valor, por limitaciones de la API gratuita.
+  estadoBtnClimaActual:boolean=false; //En función de su estado se imprime en pantalla "clima": vector de 40 posiciones, o "climaActual": un único valor (limitaciones de la API gratuita).
   /**
-   * @function climaHoraActual - en función del registro calcula el clima de la hora actual a través de la ciudad buscada o las coordenadas.
+   * @function btnClimaActual - en función del registro calcula el clima de la hora actual a través de la dirección/ciudad o las coordenadas.
    */
   btnClimaActual(registro:string) {
     //Cambia las etiquetas y estado del botón CALCULAR CLIMA ACTUAL:
@@ -55,7 +99,7 @@ export class ClimaPage {
       this.estadoBtnClimaActual=false;
     }
 
-    //En función del último componente presionado, obtiene clima por GPS o nombre de ciudad.
+    //En función del último componente presionado, obtiene clima por GPS o por dirección/nombre de ciudad.
     if(registro==`ion-button`) {
       this.btnObtenerClimaGPS(this.lat,this.long,this.unidad,this.idioma);
     }
@@ -67,33 +111,53 @@ export class ClimaPage {
 
   //#region Botón GPS:
 
-  /**
-   * @function btnObtenerClimaGPS - Envía parámetros a la API y recibe información del clima.
+  /** 
+   * @function btnObtenerClimaGPS - Envía parámetros a la API y recibe datos del clima por intervalos y actual.
    * @param {number} lat - latitud.
    * @param {number} long - longitud.
    * @param {string} unidad - unidad de medición: métrico o imperial.
    * @param {string} idioma - español o inglés.
    */
   btnObtenerClimaGPS(lat:number,long:number,unidad:string,idioma:string) {
-    //JSON del clima por intervalos de 3 horas por 5 días (12:00, 15:00, 18:00, 21:00, 00:00...):
-    this.conexClima.getURL_Coord(lat,long,unidad,idioma).subscribe({
-      next: (r) => { 
-        this.clima=r;
-        console.log(`Se obtuvo clima por intervalos y coordenadas: `,r);
-      },
-      error: (e) => {
-        console.error(`No se pudo obtener clima por intervalos y coordenadas: `,e)
-      }
-    });
+    //JSON del clima por intervalos predefinidos de 3 horas por 5 días (12:00, 15:00, 18:00, 21:00, 00:00...):
+    if(this.clima==undefined) { //Si los intervalos aún no son cargados, se ejecuta llamada a la API.
+      this.conexClima.getURL_Coord(lat,long,unidad,idioma).subscribe({
+        next: (r) => {
+          this.clima=r;
+          console.log(`Se obtuvo clima por intervalos y coordenadas: `,r);
+        },
+        error: (e) => {
+          this.notificarError(e);
+        }
+      });
+    } //Si ya hay datos en "clima" se los compara con los nuevos parámetros en el segundo ejecución del método.
+    else if(this.lat==lat&&this.long==long&&this.unidad==unidad&&this.idioma==idioma) {
+      console.log(`Clima por intervalos ya esta cargado con estas coordenadas, unidad de medición e idioma. No hubo nuevo llamado a la API.`);
+    }
+    else { //Si clima no es indefinido y no se repitieron parámetros de una búsqueda previa, realiza nuevo llamado.
+      this.conexClima.getURL_Coord(lat,long,unidad,idioma).subscribe({
+        next: (r) => {
+          this.clima=r;
+          console.log(`Se obtuvo clima por intervalos y coordenadas: `,r);
+        },
+        error: (e) => {
+          this.notificarError(e);
+        }
+      });
+    }
 
-    //JSON del clima en la hora actual:
+    //Guarda coordenadas de la última llamada al método, para compararlo con la próxima llamada.
+    this.lat=lat;
+    this.long=long;
+
+    //JSON del clima en la hora actual (este se actualiza siempre que el usuario lo quiera):
     this.conexClima.getURL_Coord_HoraActual(lat,long,unidad,idioma).subscribe({
       next: (r) => { 
         this.climaActual=r;
         console.log(`Se obtuvo clima por hora actual y coordenadas: `,r);
       },
       error: (e) => {
-        console.log(`No se obtuvo clima por hora actual y coordenadas: `,e);
+        this.notificarError(e);
       }
     });
 
@@ -103,51 +167,41 @@ export class ClimaPage {
 
   //#region Searchbar:
 
-  public ciudades = [ //Búsqueda con resultados predefinidos.
-    'Buenos Aires',
-    'La Plata',
-    'Rosario',
-    'Montevideo',
-    'Santiago de Chile',
-    'Río de Janeiro',
-    'Brasilia',
-    'La Paz',
-    'Asunción',
-    'Lima',
-  ];
-
   ciudadEscrita: string = ''; //Recibe la ciudad escrita por el usuario en la barra de búsqueda.
+  public ciudades = [ //Sugerencias para la lista de la barra de búsqueda.
+    'Buenos Aires, AR',
+    'La Plata, AR',
+    'Rosario, AR',
+    'Montevideo, UY',
+    'Santiago de Chile, CL',
+    'Río de Janeiro, BR',
+    'Brasilia, BR',
+    'La Paz, BO',
+    'Asunción, PY',
+    'Lima, PE',
+  ];
+  
   /**
-   * @function sbarObtenerClimaCiudad - En función del texto introducido en la barra de búsqueda se calcula el clima de la ciudad solicitada.
+   * @function sbarObtenerClimaCiudad - En función del texto en la barra de búsqueda se calcula el clima solicitada.
    * @param {any} evento - Variable indefinida para recibir eventos del componente.
    */
   sbarObtenerClimaCiudad(buscado:string) {
     if(buscado!=``) {
-      this.conexClima.getURL_Ciudad(buscado,this.unidad,this.idioma).subscribe({
+      console.log("Texto colocado en la barra de búsqueda: ",buscado);
+      this.conexClima.getGeocodificacion(buscado).subscribe({
         next: (r) => {
-          this.clima=r;
-          console.log(`Se obtuvo clima por intervalos y ciudad deseada: `,r);
+          this.geoCodificacion=r;
+          console.log("API Position Stack: ",this.geoCodificacion);
+          if(this.geoCodificacion.data[0]!=undefined) {
+            this.btnObtenerClimaGPS(this.geoCodificacion.data[0].latitude,this.geoCodificacion.data[0].longitude,
+            this.unidad,this.idioma);
+          }
+          else {
+            this.alertaNoEncontrado();
+          }
         },
         error: (e) => {
-          console.error(`Error ${e.status}. No se obtuvo clima por intervalos y ciudad deseada: `,e);
-          if(e.status==404)
-            this.alertaError();
-          else if(e.status==0)
-            this.alertaFallaConexion();
-        }
-      });
-
-      this.conexClima.getURL_Ciudad_HoraActual(buscado,this.unidad,this.idioma).subscribe({ 
-        next: (r) => { 
-          this.climaActual=r;
-          console.log(`Se obtuvo clima por hora actual y ciudad deseada: `,r);
-        },
-        error: (e) => {
-          console.log(`Error ${e.status}. No se obtuvo clima por hora actual y ciudad deseada: `,e);
-          if(e.status==404)
-            this.alertaError();
-          else if(e.status==0)
-            this.alertaFallaConexion();
+          this.notificarError(e);
         }
       });
       this.registro=`ion-searchbar`;
@@ -195,35 +249,9 @@ export class ClimaPage {
   mostrarLista() {
     this.listaVisible = !this.listaVisible;
   }
-
-  /**
-   * @function alertaError - Crea un mensaje emergente de error para el usuario.
-   */
-  async alertaError() {
-    const alert = await this.alertController.create({
-      header: 'Error',
-      subHeader: 'No se ha encontrado el elemento',
-      message: 'La ciudad solicitada no se encuentra en nuestro servicio.',
-      buttons: ['OK'],
-    });
-    await alert.present();
-  }
-
-  /**
-   * @function alertaFallaConexion - Crea un mensaje emergente de error para el usuario.
-   */
-  async alertaFallaConexion() {
-    const alert = await this.alertController.create({
-      header: 'Error',
-      subHeader: 'Conexión no establecida',
-      message: 'Espera unos momentos o revisa tu conexión a internet.',
-      buttons: ['OK'],
-    });
-    await alert.present();
-  }
   //#endregion
 
-  //#region Ion-Range:
+  //#region Ion-Range (barra de horas):
 
   indiceIonRange:number=0; //Posición del "knob" (el pequeño botón que el usuario puede mover por la barra horaria).
   /**
@@ -234,7 +262,7 @@ export class ClimaPage {
    */
   cambiarHoraClima(ev: Event) {
     this.indiceIonRange=Number((ev as RangeCustomEvent).detail.value);
-    this.calcularPseudoMatriz(this.btnSeleccionado,this.indiceIonRange);
+    this.calcularPseudoMatriz(this.cci,this.indiceIonRange);
     console.log("Knob seleccionado en ion-range: ",this.indiceIonRange);
   }
   //#endregion
@@ -243,9 +271,9 @@ export class ClimaPage {
 
   indicePseudoMatriz:number=0; //Debido a que la API devuelve un vector gigante, se ha tratado como matriz.
   /**
-   * @function calcularPseudoMatriz - Trata al vector de 40 posiciones como si se tratara de una matriz de 5 x 8. 5 días y 8 intervalos horarios diarios.
+   * @function calcularPseudoMatriz - Trata al vector de 40 posiciones como una matriz de 5 x 8. 5 días, 8 intervalos.
    * @param {number} fila - representa al número de días.
-   * @param {number} columna - representa al número de intervalos horarios en un día (12:00, 15:00, 18:00, 21:00... etc).
+   * @param {number} columna - representa al número de intervalos horarios en un día (12:00, 15:00, 18:00... etc).
    */
   calcularPseudoMatriz(fila: number, columna: number) {
     if (fila >= 0 && fila < 5 && columna >= 0 && columna < 8) {
@@ -253,30 +281,45 @@ export class ClimaPage {
     }
   }
   
-  /** 
+  /** Método descartado, tal vez futuramente reutilizado...
    * @function cambiarClima - Cambia el clima en función del botón de clima (día) y el knob seleccionado en el ion-range (hora).
    * @param {number} indice - "id" de cada botón. 
-   */
+   *
   cambiarClima(indice: number) {
     this.btnSeleccionado = indice;
     this.calcularPseudoMatriz(indice,this.indiceIonRange);
-  }
+  }*/
 
-  cci:number=0; //Contador carousel item.
+  cci:number=0; //Contador carousel item (representa las filas de la pseudomatriz {slide clima día 1, 2, etc...}).
+  /**
+   * @function sumarContador - incrementa un contador que sirve como índice de los botones de clima por día.
+   */
   sumarContador() {
     this.cci++;
     if(this.cci>4) {
       this.cci=0;
     }
-    console.log("Se ejecutó sumarContador(): ",this.cci);
+    this.calcularPseudoMatriz(this.cci,this.indiceIonRange);
   }
 
+  /**
+   * @function restarContador - decrementa un contador que sirve como índice de los botones de clima por día.
+   */
   restarContador() {
     this.cci--;
     if(this.cci<0) {
       this.cci=4;
     }
-    console.log("Se ejecutó restarContador(): ",this.cci);
+    this.calcularPseudoMatriz(this.cci,this.indiceIonRange);
+  }
+
+  /**
+   * @function setContador - establece el valor del contador para su uso en los carousel-indicators de Bootstrap. 
+   */
+  setContador(set:number) {
+    if(set>=0 && set<5) {
+      this.cci=set;
+    }
   }
   //#endregion
 
@@ -302,52 +345,12 @@ export class ClimaPage {
     }
     
     console.log(`Registro: `,this.registro);
-    console.log(`Estado: `,this.estadoBtnClimaActual);
 
-    if(this.registro==`ion-searchbar`&&!this.estadoBtnClimaActual) {
-      this.conexClima.getURL_Ciudad(this.ciudadEscrita,this.unidad,this.idioma).subscribe({ 
-        next: (r) => { 
-          this.clima=r;
-          console.log(`Se obtuvo el clima por intervalos y ciudad deseada: `,r);
-        },
-        error: (e) => {
-          console.log(`No se obtuvo el clima por intervalos y ciudad deseada: `,e);
-        }
-      });
+    if(this.registro==`ion-searchbar`) {
+      this.sbarObtenerClimaCiudad(this.ciudadEscrita);
     }
     else {
-      this.conexClima.getURL_Coord(this.lat,this.long,this.unidad,this.idioma).subscribe({
-        next: (r) => { 
-          this.clima=r;
-          console.log(`Se obtuvo el clima por intervalos y coordenadas: `,r);
-        },
-        error: (e) => {
-          console.log(`No se obtuvo el clima por intervalos y coordenadas: `,e);
-        }
-      });
-    }
-
-    if(this.registro==`ion-searchbar`&&this.estadoBtnClimaActual) {
-      this.conexClima.getURL_Ciudad_HoraActual(this.ciudadEscrita,this.unidad,this.idioma).subscribe({ 
-        next: (r) => { 
-          this.climaActual=r;
-          console.log(`Se obtuvo el clima actual y ciudad deseada: `,r);
-        },
-        error: (e) => {
-          console.log(`No se obtuvo el clima actual y ciudad deseada: `,e);
-        }
-      });
-    }
-    else {
-      this.conexClima.getURL_Coord_HoraActual(this.lat,this.long,this.unidad,this.idioma).subscribe({
-        next: (r) => { 
-          this.climaActual=r;
-          console.log(`Se obtuvo el clima actual por coordenadas: `,r);
-        },
-        error: (e) => {
-          console.log(`No se obtuvo el clima actual por coordenadas: `,e);
-        }
-      });
+      this.btnObtenerClimaGPS(this.lat,this.long,this.unidad,this.idioma);
     }
   }
 
