@@ -39,6 +39,7 @@ export class LoginPage {
           this.redireccionarUsuario(estaVerificado);
 
           await this.toastService.mostrarToast('¡Bienvenido!', 'success', 'checkmark-circle-outline');
+          console.log("Ingresó con un usuario de Firebase.");
         }
       } catch (error) {
         console.log('Error al iniciar sesión con email: ', error);
@@ -58,6 +59,7 @@ export class LoginPage {
         this.redireccionarUsuario(estaVerificado);
 
         await this.toastService.mostrarToast('¡Bienvenido!', 'success', 'checkmark-circle-outline');
+        console.log("Ingresó con un usuario de Google.");
       } else {
         await this.toastService.mostrarToast('Ups... Ocurrió un problema al iniciar sesión con Google.', 'danger', 'warning-outline');
       }

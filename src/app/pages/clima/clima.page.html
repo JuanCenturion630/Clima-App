@@ -70,6 +70,9 @@
     <ion-list [ngClass]="{ 'mostrarLista-style': !listaVisible }">
       <ion-item *ngFor="let ciudad of ciudades" (click)="copiarCiudadSugerida(ciudad)" (click)="mostrarLista()">
         <ion-label>{{ ciudad }}</ion-label>
+        <ion-button>
+          <ion-icon></ion-icon>
+        </ion-button>
       </ion-item>
     </ion-list>
   </ion-toolbar>

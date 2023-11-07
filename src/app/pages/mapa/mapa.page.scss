@@ -1,0 +1,36 @@
+.marcadorEstetica {
+    display: block;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+}
+.coordenadasEstetica {
+    background: rgba(0, 0, 0, 0.7);
+    color: #fff;
+    position: absolute;
+    bottom: 40px;
+    left: 10px;
+    padding: 5px 10px;
+    margin: 0;
+    font-size: 14px;
+    line-height: 18px;
+    border-radius: 3px;
+    display: none;
+}
+.mapboxgl-ctrl-geocoder {
+    width: 300px; /*Ajusta el ancho de la barra de búsqueda.*/
+}
+#cuerpo { 
+    margin:0px; 
+    padding:0px; 
+}
+#mapa { 
+    position:absolute; 
+    top:0px; 
+    bottom:0px; 
+    width:100%; 
+}
+.tituloEncabezado {
+    margin-left: 28%;
+    //Elegir fuentes más estéticas.
+}

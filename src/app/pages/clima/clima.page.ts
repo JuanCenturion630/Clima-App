@@ -25,9 +25,10 @@ export class ClimaPage implements OnInit {
   registro:string=`ion-button`; //Lleva un registro de cuál fue el último componente que recibió clic.
   iconURL:string=''; //Recibe iconos de la API climática.
 
-  constructor(private conexClima:ClimaService, private route:ActivatedRoute,private authService:AuthService,
-    private router: Router, private menu: MenuController,private alertController: AlertController,
-    private firestore: FirestoreService /*private storage:Storage*/) {
+  constructor(private climaService:ClimaService, private route:ActivatedRoute, private authService:AuthService,
+    private router:Router, private menu:MenuController, private alerta:AlertController, 
+    private firestore:FirestoreService) {
+    
     //#region Recupera las coordenadas de Login, las imprime en consola y obtiene el clima:
 
     this.lat =+this.route.snapshot.queryParams['lat'];
@@ -39,7 +40,7 @@ export class ClimaPage implements OnInit {
   }
 
   ngOnInit() {
-    const uid: string = localStorage.getItem('uid') || "";
+    /*const uid: string = localStorage.getItem('uid') || "";
     if(uid != ""){
       this.firestore.getUsuario(uid).subscribe((data) => {
         const usuarioData: any = data.payload.data();
@@ -47,7 +48,11 @@ export class ClimaPage implements OnInit {
           this.ciudades = usuarioData.ciudadesFavoritas;
         }
       });
-    }
+    }*/
+
+    this.ciudadesJSON = localStorage.getItem("ciudades") || "";
+    this.ciudades = JSON.parse(this.ciudadesJSON) || null;
+
   }
 
   //#region Notificación de errores:
@@ -71,7 +76,7 @@ export class ClimaPage implements OnInit {
    * @function alertaNoEncontrado - Crea un mensaje emergente notificando una búsqueda no encontrada.
    */
   async alertaNoEncontrado() {
-    const alert = await this.alertController.create({
+    const alert = await this.alerta.create({
       header: 'Error',
       subHeader: 'No se ha encontrado el elemento',
       message: 'Los datos solicitados no se encuentran en nuestro servicio.',
@@ -84,7 +89,7 @@ export class ClimaPage implements OnInit {
    * @function alertaFallaConexion - Crea un mensaje emergente notificando la ausencia de conexión.
    */
   async alertaFallaConexion() {
-    const alert = await this.alertController.create({
+    const alert = await this.alerta.create({
       header: 'Error',
       subHeader: 'Conexión no establecida',
       message: 'Espera unos momentos o revisa tu conexión a internet.',
@@ -134,7 +139,7 @@ export class ClimaPage implements OnInit {
   btnObtenerClimaGPS(lat:number,long:number,unidad:string,idioma:string) {
     //JSON del clima por intervalos predefinidos de 3 horas por 5 días (12:00, 15:00, 18:00, 21:00, 00:00...):
     if(this.clima==undefined) { //Si los intervalos aún no son cargados, se ejecuta llamada a la API.
-      this.conexClima.getURL_Coord(lat,long,unidad,idioma).subscribe({
+      this.climaService.getURL_Coord(lat,long,unidad,idioma).subscribe({
         next: (r) => {
           this.clima=r;
           console.log(`Se obtuvo clima por intervalos y coordenadas: `,r);
@@ -148,7 +153,7 @@ export class ClimaPage implements OnInit {
       console.log(`Clima por intervalos ya esta cargado con estas coordenadas, unidad de medición e idioma. No hubo nuevo llamado a la API.`);
     }
     else { //Si clima no es indefinido y no se repitieron parámetros de una búsqueda previa, realiza nuevo llamado.
-      this.conexClima.getURL_Coord(lat,long,unidad,idioma).subscribe({
+      this.climaService.getURL_Coord(lat,long,unidad,idioma).subscribe({
         next: (r) => {
           this.clima=r;
           console.log(`Se obtuvo clima por intervalos y coordenadas: `,r);
@@ -164,7 +169,7 @@ export class ClimaPage implements OnInit {
     this.long=long;
 
     //JSON del clima en la hora actual (este se actualiza siempre que el usuario lo quiera):
-    this.conexClima.getURL_Coord_HoraActual(lat,long,unidad,idioma).subscribe({
+    this.climaService.getURL_Coord_HoraActual(lat,long,unidad,idioma).subscribe({
       next: (r) => { 
         this.climaActual=r;
         console.log(`Se obtuvo clima por hora actual y coordenadas: `,r);
@@ -191,9 +196,9 @@ export class ClimaPage implements OnInit {
     'Brasilia',
     'La Paz',
     'Asunción',
-    'Lima',
+    'Lima'
   ];
-  
+
   /**
    * @function sbarObtenerClimaCiudad - En función del texto en la barra de búsqueda se calcula el clima solicitada.
    * @param {any} evento - Variable indefinida para recibir eventos del componente.
@@ -201,13 +206,14 @@ export class ClimaPage implements OnInit {
   sbarObtenerClimaCiudad(buscado:string) {
     if(buscado!=``) {
       console.log("Texto colocado en la barra de búsqueda: ",buscado);
-      this.conexClima.getGeocodificacion(buscado).subscribe({
+      this.climaService.getGeocodificacion(buscado).subscribe({
         next: (r) => {
           this.geoCodificacion=r;
           console.log("API Position Stack: ",this.geoCodificacion);
           if(this.geoCodificacion.data[0]!=undefined) {
-            this.btnObtenerClimaGPS(this.geoCodificacion.data[0].latitude,this.geoCodificacion.data[0].longitude,
-            this.unidad,this.idioma);
+            this.btnObtenerClimaGPS(this.geoCodificacion.data[0].latitude,this.geoCodificacion.data[0].longitude,this.unidad,this.idioma);
+            this.guardarEnLocalStorage(buscado);
+            //this.guardarEnFirebase(buscado); //Si la dirección fue encontrada, se guarda como sugerido en una lista.
           }
           else {
             this.alertaNoEncontrado();
@@ -237,30 +243,57 @@ export class ClimaPage implements OnInit {
     }
   }
 
+  ciudadesJSON:string=``;
+  /**
+   * @function guardarEnLocalStorage - guarda las búsquedas del usuario en localStorage.
+   * @param elemento - ciudades previamente buscadas.
+   */
+  guardarEnLocalStorage(elemento:string) {
+    let direccion:string=elemento.charAt(0).toUpperCase()+elemento.slice(1).toLowerCase();
+    
+    if (this.ciudades.includes(direccion)) { //Si elemento ya existe, aborta el método.
+      return; //Devolver un return vacío detiene el método.
+    }
+    else {
+      this.ciudades.unshift(direccion); //Agrega elemento.
+      if(this.ciudades.length>10) { //Si los elementos superan 10, borra el último.
+        this.ciudades.pop();
+      }
+      this.ciudadesJSON = JSON.stringify(this.ciudades); //Convierte el vector en un JSON.
+      localStorage.setItem("ciudades", this.ciudadesJSON); //Crea variable localStorage.
+    }
+  }
+
+  /**
+   * @function guardarEnFirebase - guarda los elementos favoritos del ion-list en Firebase.
+   * @param {string} elemento - sugerencia favorita.
+   */
+  guardarEnFirebase(elemento:string) {
+    let direccion: string = elemento.toLowerCase();
+    let listaSugeridos = this.ciudades.map(ciudad => ciudad.toLowerCase());
+    if (!listaSugeridos.includes(direccion)) {
+      const uid: string = localStorage.getItem('uid') || ""; //ID del elemento en Firebase.
+      if (uid != "") {
+        //Insertar nuevo valor al inicio de lista "ciudades" (su primera letra en mayúscula, el resto en minúsculas).
+        this.ciudades.unshift(elemento.charAt(0).toUpperCase()+elemento.slice(1).toLowerCase());
+        if (this.ciudades.length > 10) { //Si "ciudades" tiene más de 10 elementos, quita el último.
+          this.ciudades.pop();
+        }
+        let actualizados = {
+          ciudadesFavoritas: this.ciudades
+        }
+        this.firestore.actualizarUsuario(uid, actualizados);
+      }
+    }
+  }
+
   /**
    * @function filtrarElemento - Según el texto en el ion-searchbar filtra entre la lista de sugerencias.
    * @param {any} evento - Variable indefinida para recibir eventos del componente.
    */
   filtrarElemento(evento:any) {
-    //const buscado = evento.target.value.toLowerCase();
-    //this.ciudades = this.ciudades.filter((c) => c.toLowerCase().indexOf(buscado) > -1);
-    const nombreCiudad=evento.target.value;
-    let nombreCiudadEnMayusculas: string = nombreCiudad.toUpperCase();
-    let ciudadesEnMayusculas = this.ciudades.map(ciudad => ciudad.toUpperCase());
-    
-    if (nombreCiudadEnMayusculas.trim().length > 0 && !ciudadesEnMayusculas.includes(nombreCiudadEnMayusculas.trim())) {
-      const uid: string = localStorage.getItem('uid') || "";
-      if (uid != "") {
-        this.ciudades.unshift(nombreCiudad);
-        if (this.ciudades.length > 10) {
-          this.ciudades.pop();
-        }
-        let data = {
-          ciudadesFavoritas: this.ciudades
-        }
-        this.firestore.actualizarUsuario(uid, data);
-      }
-    }
+    const buscado = evento.target.value.toLowerCase();
+    this.ciudades = this.ciudades.filter((c) => c.toLowerCase().indexOf(buscado) > -1);
   }
 
   ciudadSugerida: string = ''; //Texto copiado del ion-list al ion-searchbar.

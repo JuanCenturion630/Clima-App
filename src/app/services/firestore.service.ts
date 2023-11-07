@@ -4,6 +4,7 @@ import { AngularFirestore } from '@angular/fire/compat/firestore';
 @Injectable({
   providedIn: 'root'
 })
+
 export class FirestoreService {
   constructor(private firestore: AngularFirestore) { }
 
@@ -13,13 +14,15 @@ export class FirestoreService {
    * @returns Promise<void>
    */
   crearUsuario(data: { uid: string, ciudadesFavoritas: string[] }) {
-    const { uid, ciudadesFavoritas } = data;
-      return this.firestore.collection('usuarios').doc(uid).set({ ciudadesFavoritas });
+    const { 
+      uid, 
+      ciudadesFavoritas 
+    } = data;
+    return this.firestore.collection('usuarios').doc(uid).set({ ciudadesFavoritas });
   }
 
   /**
    * @function getUsuario - Obtiene los datos del Usuario de la base de datos de Firestore.
-   * del UID pasado por parámetro.
    * @param {string} uid - UID del usuario.
    * @returns Observable<Action<DocumentSnapshot<unknown>>>
    */
@@ -28,10 +31,9 @@ export class FirestoreService {
   }
 
   /**
-   * @function actualizarUsuario - Actualiza los datos del Usuario (las ciudades favoritas), del 
-   * UID pasado por parametro.
-   * @param {string} uid - UID del Usuario que queremos actualizar los datos.
-   * @param {any} data - Los datos que queremos sobreescribir del Usuario. (Las ciudades favoritas, como un objeto).
+   * @function actualizarUsuario - Actualiza los datos del usuario (ciudades favoritas) con UID pasado por parámetro.
+   * @param {string} uid - UID del usuario al que queremos actualizar los datos.
+   * @param {any} data - Los datos que queremos sobreescribir del usuario. (Las ciudades favoritas, como un objeto).
    * @returns Promise<void>
    */
   actualizarUsuario(uid: string, data: any) {
