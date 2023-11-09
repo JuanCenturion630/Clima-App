@@ -3,7 +3,6 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { AuthService } from 'src/app/services/auth.service';
-import { GeolocalizacionService } from 'src/app/services/geolocalizacion.service';
 import { ToastService } from 'src/app/services/toast.service';
 
 import { Geolocation } from '@capacitor/geolocation';
@@ -22,7 +21,7 @@ export class LoginPage {
     contrasenia: ['', [Validators.required, Validators.minLength(8)]]
   });
 
-  constructor(private authService: AuthService, private formBuilder: FormBuilder, private router: Router, private toastService: ToastService, private conexGeo:GeolocalizacionService) { }
+  constructor(private authService: AuthService, private formBuilder: FormBuilder, private router: Router, private toastService: ToastService) { }
 
   async iniciarSesionConEmail(event: Event): Promise<void> {
     event.preventDefault();

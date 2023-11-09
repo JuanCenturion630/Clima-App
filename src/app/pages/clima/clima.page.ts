@@ -39,8 +39,11 @@ export class ClimaPage implements OnInit {
     //#endregion
   }
 
+  /**
+   * @function ngOnInit - se ejecuta como primer método de la página luego del constructor.
+   */
   ngOnInit() {
-    /*const uid: string = localStorage.getItem('uid') || "";
+    const uid: string = localStorage.getItem('uid') || "";
     if(uid != ""){
       this.firestore.getUsuario(uid).subscribe((data) => {
         const usuarioData: any = data.payload.data();
@@ -48,11 +51,7 @@ export class ClimaPage implements OnInit {
           this.ciudades = usuarioData.ciudadesFavoritas;
         }
       });
-    }*/
-
-    this.ciudadesJSON = localStorage.getItem("ciudades") || "";
-    this.ciudades = JSON.parse(this.ciudadesJSON) || null;
-
+    }
   }
 
   //#region Notificación de errores:
@@ -62,7 +61,7 @@ export class ClimaPage implements OnInit {
    * @param e - error generado por los métodos suscribe durante el llamado a las APIs.
    */
   notificarError(e:any) {
-    if(e.status==400 || e.status==404) {
+    if(e.status==400 || e.status==404 || e.status==422) {
       console.error(`Error ${e.status} (${e.statusText}). No se encontraron resultados.`,e);
       this.alertaNoEncontrado();
     }
@@ -179,6 +178,7 @@ export class ClimaPage implements OnInit {
       }
     });
 
+    this.ciudadEscrita=``; //Limpia la barra de búsqueda.
     this.registro=`ion-button`;
   }
   //#endregion
@@ -205,15 +205,15 @@ export class ClimaPage implements OnInit {
    */
   sbarObtenerClimaCiudad(buscado:string) {
     if(buscado!=``) {
-      console.log("Texto colocado en la barra de búsqueda: ",buscado);
-      this.climaService.getGeocodificacion(buscado).subscribe({
+      console.log("Texto colocado en la barra de búsqueda: ",buscado.toLowerCase());
+      this.climaService.getGeocodificacion(buscado.toLowerCase()).subscribe({
         next: (r) => {
           this.geoCodificacion=r;
           console.log("API Position Stack: ",this.geoCodificacion);
           if(this.geoCodificacion.data[0]!=undefined) {
             this.btnObtenerClimaGPS(this.geoCodificacion.data[0].latitude,this.geoCodificacion.data[0].longitude,this.unidad,this.idioma);
-            this.guardarEnLocalStorage(buscado);
-            //this.guardarEnFirebase(buscado); //Si la dirección fue encontrada, se guarda como sugerido en una lista.
+            //this.guardarEnLocalStorage(buscado);
+            this.guardarEnFirebase(buscado); //Si la dirección fue encontrada, se guarda como sugerido en una lista.
           }
           else {
             this.alertaNoEncontrado();
@@ -243,35 +243,13 @@ export class ClimaPage implements OnInit {
     }
   }
 
-  ciudadesJSON:string=``;
-  /**
-   * @function guardarEnLocalStorage - guarda las búsquedas del usuario en localStorage.
-   * @param elemento - ciudades previamente buscadas.
-   */
-  guardarEnLocalStorage(elemento:string) {
-    let direccion:string=elemento.charAt(0).toUpperCase()+elemento.slice(1).toLowerCase();
-    
-    if (this.ciudades.includes(direccion)) { //Si elemento ya existe, aborta el método.
-      return; //Devolver un return vacío detiene el método.
-    }
-    else {
-      this.ciudades.unshift(direccion); //Agrega elemento.
-      if(this.ciudades.length>10) { //Si los elementos superan 10, borra el último.
-        this.ciudades.pop();
-      }
-      this.ciudadesJSON = JSON.stringify(this.ciudades); //Convierte el vector en un JSON.
-      localStorage.setItem("ciudades", this.ciudadesJSON); //Crea variable localStorage.
-    }
-  }
-
   /**
    * @function guardarEnFirebase - guarda los elementos favoritos del ion-list en Firebase.
    * @param {string} elemento - sugerencia favorita.
    */
   guardarEnFirebase(elemento:string) {
-    let direccion: string = elemento.toLowerCase();
     let listaSugeridos = this.ciudades.map(ciudad => ciudad.toLowerCase());
-    if (!listaSugeridos.includes(direccion)) {
+    if (!listaSugeridos.includes(elemento)) {
       const uid: string = localStorage.getItem('uid') || ""; //ID del elemento en Firebase.
       if (uid != "") {
         //Insertar nuevo valor al inicio de lista "ciudades" (su primera letra en mayúscula, el resto en minúsculas).
@@ -421,7 +399,7 @@ export class ClimaPage implements OnInit {
    * @function cerrarMenu - Cierra el menú desplegable al encabezado de la página del clima.
    */
   cerrarMenu() {
-    this.menu.close();
+    this.menu.close('menuClima');
   }
 
   /** 
@@ -430,8 +408,7 @@ export class ClimaPage implements OnInit {
   cerrarSesion() {
     this.authService.cerrarSesion(); //Cierra la sesión en Firebase.
     this.router.navigate(['home']); //Redirige la página a home.
-    this.ciudadEscrita=""; //Limpia la barra de búsqueda.
-    this.btnObtenerClimaGPS(this.lat,this.long,this.unidad,this.idioma); //Recupera el clima en GPS.
+    this.registro='ion-button';
   }
   //#endregion
 }

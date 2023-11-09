@@ -1,5 +1,4 @@
 import { Component } from '@angular/core';
-import { GeolocalizacionService } from '../services/geolocalizacion.service';
 
 @Component({
   selector: 'app-home',
@@ -8,7 +7,6 @@ import { GeolocalizacionService } from '../services/geolocalizacion.service';
 })
 export class HomePage {
 
-  constructor(private conexGeo:GeolocalizacionService) {
-    //this.conexGeo.getCoord();
+  constructor() {
   }
 }

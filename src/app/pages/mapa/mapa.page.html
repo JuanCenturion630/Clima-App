@@ -1,31 +1,58 @@
-<ion-header id="Encabezado">
+<ion-menu id="menuMapa" contentId="EncabezadoMapa" side="end">
     <ion-toolbar>
-      <ion-title class="tituloEncabezado"> Clima a Tiempo </ion-title>
+        <ion-header>
+            <ion-title>Opciones</ion-title>
+        </ion-header>
     </ion-toolbar>
+    <ion-content class="ion-padding">
+      Seleccione una opción.
+      <div style="margin-top: 5px;"></div> <!--Espaciado-->
+      <!--Botón para Cambiar de Celsius a Farenheite y viceversa-->
+      <ion-button fill="outline" (click)="sistemaMetrico(); cerrarMenu();">
+        <ion-icon slot="start" name="partly-sunny"></ion-icon>
+        {{ btnNom }}
+      </ion-button>
+      <div style="margin-top: 5px;"></div> <!--Espaciado-->
+      <!--Botón para cerrar sesión en la aplicación-->
+      <ion-button fill="outline" (click)="cerrarMenu(); cerrarSesion();">
+        <ion-icon slot="start" name="log-out"></ion-icon>
+        Cerrar sesión
+      </ion-button>
+    </ion-content>
+</ion-menu>
 
-    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no"/>
-
-    <link rel="stylesheet" href="https://tiles.locationiq.com/v3/libs/maplibre-gl/1.15.2/maplibre-gl.css"/>
-    <script src="https://tiles.locationiq.com/v3/libs/maplibre-gl/1.15.2/maplibre-gl.js"></script>
-
-    <link rel="stylesheet" href="https://tiles.locationiq.com/v3/css/liq-styles-ctrl-libre-gl.css?v=0.1.8"/>
-    <script src="https://tiles.locationiq.com/v3/js/liq-styles-ctrl-libre-gl.js?v=0.1.8"></script>
-
-    <link rel="stylesheet" href="https://tiles.locationiq.com/v3/libs/gl-geocoder/4.5.1/locationiq-gl-geocoder.css?v=0.2.3" type="text/css"/>
-    <script src="https://tiles.locationiq.com/v3/libs/gl-geocoder/4.5.1/locationiq-gl-geocoder.min.js?v=0.2.3"></script>
-    <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/es6-promise@4/dist/es6-promise.auto.min.js"></script>
+<ion-header id="EncabezadoMapa">
+    <ion-toolbar>
+        <ion-title class="tituloEncabezado"> Clima a Tiempo </ion-title>
+        <ion-buttons slot="end"> <!--"slot" es la posición del botón en la pantalla-->
+          <ion-menu-button auto-hide="false"></ion-menu-button>
+        </ion-buttons>
+    </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-    <ion-card>
-        <ion-card-content>
-            <div id="mapa">
-                <ion-label>Mapa no cargado</ion-label> <!--Contendrá el mapa-->
-            </div>
-            <div id="cuadroCoordenadas" class="coordenadasEstetica">
-                <!--Contendrá el cuadro con coordenadas/oculto hasta obtener coordenadas-->
-            </div>        
-        </ion-card-content>
-    </ion-card>
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no"/>
+    <link rel="stylesheet" href="https://tiles.locationiq.com/v3/libs/maplibre-gl/1.15.2/maplibre-gl.css"/>
+    <link rel="stylesheet" href="https://tiles.locationiq.com/v3/css/liq-styles-ctrl-libre-gl.css?v=0.1.8"/>
+    <link rel="stylesheet" href="https://tiles.locationiq.com/v3/libs/gl-geocoder/4.5.1/locationiq-gl-geocoder.css?v=0.2.3" type="text/css"/>
+    
+    <div id="mapa">
+        <!--Contendrá el mapa-->
+    </div>
+
+    <!--Invisible hasta hacer clic en el mapa-->
+    <div id="cuadroClima" class="climaEstetica">
+        <ion-label *ngIf="climaActual" class="">
+            {{direccion}}.
+            <ion-row>
+                {{(climaActual.dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM. HH:mm':'UTC':'es' | titlecase}} | 
+                {{climaActual.weather[0].description.charAt(0).toUpperCase() + climaActual.weather[0].description.slice(1).toLowerCase()}}.
+            </ion-row>
+            <ion-row>Temp: {{climaActual.main.temp}}{{sm}} 
+                | Max: {{climaActual.main.temp_max}}{{sm}} 
+                | Min: {{climaActual.main.temp_min}}{{sm}}
+            </ion-row>
+            <ion-row>Humedad: {{climaActual.main.humidity}}% Viento: {{climaActual.wind.speed}} {{viento}}</ion-row>
+        </ion-label>
+    </div>
 </ion-content>
