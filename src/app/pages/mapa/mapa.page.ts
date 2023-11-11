@@ -18,11 +18,12 @@ export class MapaPage {
   constructor(private climaService:ClimaService, private menuMapa:MenuController, private authService:AuthService,
     private router:Router, private alerta:AlertController) {}
 
-  //#region Mapa:
+  segmento:string='temperatura';
+  temperatura:string='temperatura';
+  humedad:string='humedad';
+  viento:string='viento';
 
-  navigateToMapaPage() {
-    this.router.navigate(['/mapa']); // Navegar a la página de Mapa
-  }
+  //#region Mapa:
   
   ngOnInit() {
     const scriptsURL = [
@@ -58,6 +59,35 @@ export class MapaPage {
     cargarProximoScript();
   }
 
+  icono:string=''; //Representa nombres de iconos Ionic.
+  /**
+   * @function cambiarIcono - cambia los iconos que representan al clima.
+   * @param codIcono - código que representa los iconos del clima en API OpenWeatherMap.
+   */
+  cambiarIcono(codIcono:any) {
+    if(codIcono=='01d'||codIcono=='01n') {
+      this.icono='sunny';
+    }
+    else if(codIcono=='02d'||codIcono=='02n') {
+      this.icono='partly-sunny';
+    }
+    else if(codIcono=='03d'||codIcono=='03n'||codIcono=='04d'||codIcono=='04n') {
+      this.icono='cloud';
+    }
+    else if(codIcono=='09d'||codIcono=='09n'||codIcono=='10d'||codIcono=='10n') {
+      this.icono='rainy';
+    }
+    else if(codIcono=='11d'||codIcono=='11n') {
+      this.icono='thunderstorm';
+    }
+    else if(codIcono=='13d'||codIcono=='13n') {
+      this.icono='snow';
+    }
+    else {
+      this.icono='filter';
+    }
+  }
+
   crearMapa() {
     var cuadroClima:HTMLElement|null = document.getElementById('cuadroClima');
     var mapaPage = this; //Guardo una referencia del contexto actual para poder llamar a variables de la clase incluso en las funciones callbacks.
@@ -85,27 +115,18 @@ export class MapaPage {
       unit: 'metric' //Km
     }));
     //#endregion
-        
+
     //#region Botón GPS:
 
-    //Botón GPS en el mapa (requiere HTTPS... supuestamente)
+    //Declara botón GPS en el mapa.
     var btnGPS=new maplibregl.GeolocateControl({ 
       positionOptions: { enableHighAccuracy: true },
       trackUserLocation: true
     });
     mapaInteractivo.addControl(btnGPS);
-    
-    var intervalo:number=8000;
-    btnGPS.on('trackuserlocationstart', function(e:any) {
-      console.log("Objeto GPS: ",e);
-      ejecutarCadaOchoSeg();
-      setTimeout(function() {
-        clearInterval(intervalo);
-      }, 24000);
-    });
+    btnGPS.on('geolocate',getUbicacion);
 
-    function ejecutarCadaOchoSeg() {
-      console.log("btnGPS propiedades: ",btnGPS);
+    function getUbicacion() {
       if (btnGPS._lastKnownPosition!=undefined) {
         var lat = btnGPS._lastKnownPosition.coords.latitude;
         var long = btnGPS._lastKnownPosition.coords.longitude;
@@ -114,11 +135,9 @@ export class MapaPage {
         if(cuadroClima!=null) { //Rellena el cuadro de clima.
           mapaPage.getDireccion(lat,long);
           mapaPage.getClimaActual(lat,long,mapaPage.unidad,mapaPage.idioma);
-          cuadroClima.style.display = 'block';
         }
-      } else {
-        console.log('Siguen calculándose las coordenadas.');
       }
+      btnGPS.off('geolocate',getUbicacion); //Detiene el proceso, sino, se ejecutaría a perpetuidad.
     }
     //#endregion
 
@@ -141,7 +160,6 @@ export class MapaPage {
       if(cuadroClima!=null) { 
         mapaPage.getDireccion(e.lngLat.lat,e.lngLat.lng);
         mapaPage.getClimaActual(e.lngLat.lat,e.lngLat.lng,mapaPage.unidad,mapaPage.idioma);
-        cuadroClima.style.display = 'block'; //Vuelve visible la etiqueta.
       }
     });
     //#endregion
@@ -155,7 +173,7 @@ export class MapaPage {
       limit: 5, //Resultados máximos sugeridos.
       dedupe: 1, //Evita elementos repetidos.
       marker: {
-        color: 'blue'
+        color: 'purple'
       },
       flyTo: { //Animación de desplazamiento cuando se elige ubicación.
         screenSpeed: 7,
@@ -177,11 +195,9 @@ export class MapaPage {
       var lat = e.result.center[1];
       var long = e.result.center[0];
       
-      if(cuadroClima!=null) {
-        //Rellena el cuadro de clima.
+      if(cuadroClima!=null) { //Rellena el cuadro de clima.
         mapaPage.getDireccion(lat,long);
         mapaPage.getClimaActual(lat,long,mapaPage.unidad,mapaPage.idioma);
-        cuadroClima.style.display = 'block';
       }
     });
     //#endregion
@@ -209,6 +225,7 @@ export class MapaPage {
         this.climaActual=r;
         this.lat=lat;
         this.long=long;
+        this.cambiarIcono(this.climaActual.weather[0].icon);
       },
       error: (e) => {
         this.notificarError(e);
@@ -285,7 +302,7 @@ export class MapaPage {
 
   btnNom: string = 'Cambiar a Fahrenheit';
   sm:string=`ºC`; //Asigna una "ºC" o una "ºF" en función del estado botón "Cambiar a...".
-  viento:string=`Km/h`;
+  velocidad:string=`Km/h`;
   /**
    * @function sistemaMetrico - En función del botón "Cambiar a..." alterna entre Celsius y Fahrenheit.
    */
@@ -294,12 +311,12 @@ export class MapaPage {
       this.btnNom = 'Cambiar a Celsius';
       this.unidad = `imperial`;
       this.sm = `ºF`;
-      this.viento=`mph`;
+      this.velocidad=`mph`;
     } else {
       this.btnNom = 'Cambiar a Fahrenheit';
       this.unidad = `metric`;
       this.sm = `ºC`;
-      this.viento=`Km/h`;
+      this.velocidad=`Km/h`;
     }
     this.getClimaActual(this.lat,this.long,this.unidad,this.idioma);
   }
@@ -317,6 +334,7 @@ export class MapaPage {
   cerrarSesion() {
     this.authService.cerrarSesion(); //Cierra la sesión en Firebase.
     this.router.navigate(['home']); //Redirige la página a home.
+    
   }
   //#endregion
 }

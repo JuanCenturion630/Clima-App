@@ -7,6 +7,7 @@ import { AuthService } from 'src/app/services/auth.service';
 import { MenuController } from '@ionic/angular';
 import { AlertController } from '@ionic/angular';
 import { FirestoreService } from 'src/app/services/firestore.service';
+import { Geolocation } from '@capacitor/geolocation';
 
 @Component({
   selector: 'app-clima',
@@ -66,8 +67,8 @@ export class ClimaPage implements OnInit {
       this.alertaNoEncontrado();
     }
     else if(e.status==0) {
-      console.log(`Error ${e.status} (${e.statusText}). Se perdió la conexión con internet.`,e);
-      this.alertaFallaConexion();
+      console.log(`Error ${e.status} (${e.statusText}). No es posible describir el error.`,e);
+      this.alertaDesconocido();
     }
   }
 
@@ -87,11 +88,11 @@ export class ClimaPage implements OnInit {
   /**
    * @function alertaFallaConexion - Crea un mensaje emergente notificando la ausencia de conexión.
    */
-  async alertaFallaConexion() {
+  async alertaDesconocido() {
     const alert = await this.alerta.create({
       header: 'Error',
-      subHeader: 'Conexión no establecida',
-      message: 'Espera unos momentos o revisa tu conexión a internet.',
+      subHeader: 'Error desconocido',
+      message: 'No es posible describir la identidad del error. Recargue la aplicación.',
       buttons: ['OK'],
     });
     await alert.present();
@@ -118,7 +119,7 @@ export class ClimaPage implements OnInit {
 
     //En función del último componente presionado, obtiene clima por GPS o por dirección/nombre de ciudad.
     if(registro==`ion-button`) {
-      this.btnObtenerClimaGPS(this.lat,this.long,this.unidad,this.idioma);
+      this.obtenerClimaCoord(this.lat,this.long,this.unidad,this.idioma);
     }
     else {
       this.sbarObtenerClimaCiudad(this.ciudadEscrita);
@@ -128,58 +129,75 @@ export class ClimaPage implements OnInit {
 
   //#region Botón GPS:
 
+  /**
+   * @function btnGPS - obtiene las coordenadas del dispositivo.
+   * @param {string} unidad - unidad de medición: métrico o imperial.
+   * @param {string} idioma - español/inglés.
+   */
+  async btnGPS(unidad:string,idioma:string) {
+    const ubicacion = await Geolocation.getCurrentPosition();
+    let lat = ubicacion.coords.latitude;
+    let long = ubicacion.coords.longitude;
+    this.obtenerClimaCoord(lat,long,unidad,idioma);
+  }
+
   /** 
-   * @function btnObtenerClimaGPS - Envía parámetros a la API y recibe datos del clima por intervalos y actual.
+   * @function obtenerClimaCoord - Envía coordenadas de varias direcciones a la API y recibe datos del clima.
    * @param {number} lat - latitud.
    * @param {number} long - longitud.
    * @param {string} unidad - unidad de medición: métrico o imperial.
    * @param {string} idioma - español o inglés.
    */
-  btnObtenerClimaGPS(lat:number,long:number,unidad:string,idioma:string) {
-    //JSON del clima por intervalos predefinidos de 3 horas por 5 días (12:00, 15:00, 18:00, 21:00, 00:00...):
-    if(this.clima==undefined) { //Si los intervalos aún no son cargados, se ejecuta llamada a la API.
-      this.climaService.getURL_Coord(lat,long,unidad,idioma).subscribe({
-        next: (r) => {
-          this.clima=r;
-          console.log(`Se obtuvo clima por intervalos y coordenadas: `,r);
-        },
-        error: (e) => {
-          this.notificarError(e);
-        }
-      });
-    } //Si ya hay datos en "clima" se los compara con los nuevos parámetros en el segundo ejecución del método.
-    else if(this.lat==lat&&this.long==long&&this.unidad==unidad&&this.idioma==idioma) {
-      console.log(`Clima por intervalos ya esta cargado con estas coordenadas, unidad de medición e idioma. No hubo nuevo llamado a la API.`);
-    }
-    else { //Si clima no es indefinido y no se repitieron parámetros de una búsqueda previa, realiza nuevo llamado.
-      this.climaService.getURL_Coord(lat,long,unidad,idioma).subscribe({
-        next: (r) => {
-          this.clima=r;
-          console.log(`Se obtuvo clima por intervalos y coordenadas: `,r);
-        },
-        error: (e) => {
-          this.notificarError(e);
-        }
-      });
-    }
-
-    //Guarda coordenadas de la última llamada al método, para compararlo con la próxima llamada.
-    this.lat=lat;
-    this.long=long;
-
-    //JSON del clima en la hora actual (este se actualiza siempre que el usuario lo quiera):
-    this.climaService.getURL_Coord_HoraActual(lat,long,unidad,idioma).subscribe({
-      next: (r) => { 
-        this.climaActual=r;
-        console.log(`Se obtuvo clima por hora actual y coordenadas: `,r);
-      },
-      error: (e) => {
-        this.notificarError(e);
+  obtenerClimaCoord(lat:number,long:number,unidad:string,idioma:string) {
+    try {
+      //JSON del clima por intervalos predefinidos de 3 horas por 5 días (12:00, 15:00, 18:00, 21:00, 00:00...):
+      if(this.clima==undefined) { //Si los intervalos aún no son cargados, se ejecuta llamada a la API.
+        this.climaService.getURL_Coord(lat,long,unidad,idioma).subscribe({
+          next: (r) => {
+            this.clima=r;
+            console.log(`Se obtuvo clima por intervalos y coordenadas: `,r);
+          },
+          error: (e) => {
+            this.notificarError(e);
+          }
+        });
+      } //Si ya hay datos en "clima" se los compara con los nuevos parámetros en el segundo ejecución del método.
+      else if(this.lat==lat&&this.long==long&&this.unidad==unidad&&this.idioma==idioma) {
+        console.log(`Clima por intervalos ya esta cargado con estas coordenadas, unidad de medición e idioma. No hubo nuevo llamado a la API.`);
       }
-    });
+      else { //Si clima no es indefinido y no se repitieron parámetros de una búsqueda previa, realiza nuevo llamado.
+        this.climaService.getURL_Coord(lat,long,unidad,idioma).subscribe({
+          next: (r) => {
+            this.clima=r;
+            console.log(`Se obtuvo clima por intervalos y coordenadas: `,r);
+          },
+          error: (e) => {
+            this.notificarError(e);
+          }
+        });
+      }
 
-    this.ciudadEscrita=``; //Limpia la barra de búsqueda.
-    this.registro=`ion-button`;
+      //Guarda coordenadas de la última llamada al método, para compararlo con la próxima llamada.
+      this.lat=lat;
+      this.long=long;
+
+      //JSON del clima en la hora actual (este se actualiza siempre que el usuario lo quiera):
+      this.climaService.getURL_Coord_HoraActual(lat,long,unidad,idioma).subscribe({
+        next: (r) => { 
+          this.climaActual=r;
+          console.log(`Se obtuvo clima por hora actual y coordenadas: `,r);
+        },
+        error: (e) => {
+          this.notificarError(e);
+        }
+      });
+
+      this.ciudadEscrita=``; //Limpia la barra de búsqueda.
+      this.registro=`ion-button`;
+    }
+    catch(error) {
+      console.log(error);
+    }
   }
   //#endregion
 
@@ -205,15 +223,19 @@ export class ClimaPage implements OnInit {
    */
   sbarObtenerClimaCiudad(buscado:string) {
     if(buscado!=``) {
-      console.log("Texto colocado en la barra de búsqueda: ",buscado.toLowerCase());
-      this.climaService.getGeocodificacion(buscado.toLowerCase()).subscribe({
+      console.log("Texto colocado en la barra de búsqueda: ",buscado.toLowerCase().trim().replace(/\b\w/g, (match) => match.toUpperCase()));
+      this.climaService.getGeocodificacion(buscado.toLowerCase().trim()).subscribe({
         next: (r) => {
           this.geoCodificacion=r;
           console.log("API Position Stack: ",this.geoCodificacion);
           if(this.geoCodificacion.data[0]!=undefined) {
-            this.btnObtenerClimaGPS(this.geoCodificacion.data[0].latitude,this.geoCodificacion.data[0].longitude,this.unidad,this.idioma);
-            //this.guardarEnLocalStorage(buscado);
-            this.guardarEnFirebase(buscado); //Si la dirección fue encontrada, se guarda como sugerido en una lista.
+            this.obtenerClimaCoord(this.geoCodificacion.data[0].latitude,this.geoCodificacion.data[0].longitude,
+              this.unidad,this.idioma);
+            /*Si la dirección fue encontrada, se guarda como sugerido:
+              removiendo todos los espacios en blanco del principio y final del string (.trim())
+              y convirtiendo a la primera letra de todas las palabras del strin en mayúsculas (.replace())*/
+            let buscadoFormateado:string=buscado.trim().replace(/\b\w/g, (match) => match.toUpperCase());
+            this.guardarEnFirebase(buscadoFormateado);
           }
           else {
             this.alertaNoEncontrado();
@@ -252,17 +274,23 @@ export class ClimaPage implements OnInit {
     if (!listaSugeridos.includes(elemento)) {
       const uid: string = localStorage.getItem('uid') || ""; //ID del elemento en Firebase.
       if (uid != "") {
-        //Insertar nuevo valor al inicio de lista "ciudades" (su primera letra en mayúscula, el resto en minúsculas).
-        this.ciudades.unshift(elemento.charAt(0).toUpperCase()+elemento.slice(1).toLowerCase());
-        if (this.ciudades.length > 10) { //Si "ciudades" tiene más de 10 elementos, quita el último.
-          this.ciudades.pop();
+        const ciudadNueva = elemento.charAt(0).toUpperCase() + elemento.slice(1).toLowerCase();
+        if (!this.ciudades.includes(ciudadNueva)) { //Verificar si la ciudad nueva ya está en la lista.
+          this.ciudades.unshift(ciudadNueva); //Insertar nuevo valor al inicio de la lista "ciudades".
+          if (this.ciudades.length > 10) { //Si "ciudades" tiene más de 10 elementos, quitar el último.
+            this.ciudades.pop();
+          }
+          let actualizados = {
+            ciudadesFavoritas: this.ciudades
+          }
+          this.firestore.actualizarUsuario(uid, actualizados);
         }
-        let actualizados = {
-          ciudadesFavoritas: this.ciudades
-        }
-        this.firestore.actualizarUsuario(uid, actualizados);
       }
     }
+  }
+
+  borrarDeFirebase() {
+
   }
 
   /**
@@ -289,6 +317,29 @@ export class ClimaPage implements OnInit {
    */
   mostrarLista() {
     this.listaVisible = !this.listaVisible;
+  }
+
+  busquedas: { nombre: string, icono: string, color: string } [] = [
+    {nombre:'Buenos Aires',icono:'star',color:'#00c3ff'},
+    {nombre:'La Plata',icono:'star',color:'#00c3ff'},
+    {nombre:'Rosario',icono:'star',color:'#00c3ff'},
+    {nombre:'Montevideo',icono:'star',color:'#00c3ff'},
+    {nombre:'Santiago de Chile',icono:'star',color:'#00c3ff'},
+    {nombre:'Río de Janeiro',icono:'star',color:'#00c3ff'},
+    {nombre:'Brasilia',icono:'star',color:'#00c3ff'},
+    {nombre:'La Paz',icono:'star',color:'#00c3ff'},
+    {nombre:'Asunción',icono:'star',color:'#00c3ff'},
+    {nombre:'Lima',icono:'star',color:'#00c3ff'}
+  ];
+  /**
+   * @function cambiarIcono - cambia icono y color del botón "Favoritos" en función del evento mouse iniciado.
+   */
+  cambiarIcono(nombre:string,icono:string) {
+    const direcciones = this.busquedas.find(item => item.nombre == nombre);
+    if (direcciones) {
+      direcciones.icono = icono == 'trash' ? 'star' : 'trash';
+      direcciones.color = icono == 'trash' ? '#00c3ff' : '#ff0000';
+    }
   }
   //#endregion
 
@@ -391,7 +442,7 @@ export class ClimaPage implements OnInit {
       this.sbarObtenerClimaCiudad(this.ciudadEscrita);
     }
     else {
-      this.btnObtenerClimaGPS(this.lat,this.long,this.unidad,this.idioma);
+      this.obtenerClimaCoord(this.lat,this.long,this.unidad,this.idioma);
     }
   }
 
