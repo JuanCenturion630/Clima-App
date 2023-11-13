@@ -335,10 +335,17 @@ export class ClimaPage implements OnInit {
    * @function cambiarIcono - cambia icono y color del botón "Favoritos" en función del evento mouse iniciado.
    */
   cambiarIcono(nombre:string,icono:string) {
-    const direcciones = this.busquedas.find(item => item.nombre == nombre);
-    if (direcciones) {
-      direcciones.icono = icono == 'trash' ? 'star' : 'trash';
-      direcciones.color = icono == 'trash' ? '#00c3ff' : '#ff0000';
+    //De todo el vector "busquedas" obtengo solo los iguales al parámetro "nombre" (único valor).
+    const busqActual = this.busquedas.find(item => item.nombre == nombre);
+    if (busqActual) { 
+      /** Al valor único "busqActual.icono" le asignó el parámetro "icono": si "icono"=="trash" es true,
+       * lo cambio por "star", si es false cambiarlo a "trash", de facto, dejarlo igual.
+       * 
+       * A "busqActual.color" le asignó el parámetro "icono": si "icono"=="trash" es true, lo cambio por 
+       * celeste en hexadecimal, si es false cambiarlo a rojo en hexadecimal. 
+       */
+      busqActual.icono = icono == 'trash' ? 'star' : 'trash';
+      busqActual.color = icono == 'trash' ? '#00c3ff' : '#ff0000';
     }
   }
   //#endregion

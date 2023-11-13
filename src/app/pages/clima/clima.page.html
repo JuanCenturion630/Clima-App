@@ -63,6 +63,7 @@
       como índice debe estar siempre en singular en relación con el nombre del vector "busquedas".
     -->
     <ion-list [ngClass]="{ 'mostrarLista-style': !listaVisible }">
+      
       <ion-item *ngFor="let busqueda of busquedas" 
         (click)="copiarCiudadSugerida(busqueda.nombre)" 
         (click)="mostrarLista()">
@@ -74,6 +75,7 @@
           <ion-icon name="{{busqueda.icono}}"></ion-icon>
         </ion-button>
       </ion-item>
+
     </ion-list>
   </ion-toolbar>
 
