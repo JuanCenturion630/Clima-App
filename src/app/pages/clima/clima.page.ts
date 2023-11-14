@@ -297,8 +297,8 @@ export class ClimaPage implements OnInit {
     
     //Si se obtuvo un ID de usuario válido.
     if (this.uid != "") {
-      //Si "busquedas" NO incluye "busqNueva".
-      if (!this.busquedas.includes(busqNueva)) { 
+      const busqRepetida = this.busquedas.some(item => item.nombre == busqNueva.nombre);
+      if (!busqRepetida) {
         this.busquedas.unshift(busqNueva); //Insertar "busqNueva" en "busquedas".
         if (this.busquedas.length > 10) { //Si "busquedas" tiene más de 10 elementos, quitar el último.
           this.busquedas.pop();
@@ -307,7 +307,7 @@ export class ClimaPage implements OnInit {
         this.firestore.actualizarDatosUsuario(this.uid, busqActualizadas);
       }
       else {
-        console.log("La nueva búsqueda ya está entre las viejas. No se repetirá su guardado.");
+        console.log("La búsqueda ya existe. No se volverá a guardar.");
       }
     }
     else {
