@@ -69,7 +69,7 @@
         (click)="mostrarLista()">
         <ion-label>{{busqueda.nombre}}</ion-label>
         <ion-button fill="outline" style="--border-width: 0px; --color: {{busqueda.color}}" 
-          (Click)="borrarDeFirebase()" 
+          (click)="borrarDeFirebase(busqueda.nombre)" 
           (mouseenter)="cambiarIcono(busqueda.nombre,'star')" 
           (mouseleave)="cambiarIcono(busqueda.nombre,'trash')">
           <ion-icon name="{{busqueda.icono}}"></ion-icon>

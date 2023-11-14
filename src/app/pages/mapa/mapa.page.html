@@ -44,7 +44,7 @@
     <div id="cuadroClima" class="climaEstetica">
         <ion-toolbar *ngIf="climaActual">
             <ion-label>
-                <ion-icon name="bicycle"></ion-icon>
+                <ion-icon name="location"></ion-icon>
                 {{direccion}}
                 <ion-row> <!--Fecha-->
                     <ion-icon name="time"></ion-icon>
@@ -72,17 +72,17 @@
         </ion-toolbar>
 
         <ion-toolbar *ngIf="climaActual&&segmento===temperatura">
-            <ion-label class="ion-text-center ion-align-items-center">
+            <ion-label style="margin-left: 9px;">
                 ACT: {{climaActual.main.temp}}{{sm}} | MAX: {{climaActual.main.temp_max}}{{sm}} | MIN: {{climaActual.main.temp_min}}{{sm}}
             </ion-label>
         </ion-toolbar>
 
         <ion-toolbar *ngIf="climaActual&&segmento===humedad">
-            <ion-label class="ion-text-center ion-align-items-center">Humedad: {{climaActual.main.humidity}}%</ion-label>
+            <ion-label style="margin-left: 115px;">Humedad: {{climaActual.main.humidity}}%</ion-label>
         </ion-toolbar>
 
         <ion-toolbar *ngIf="climaActual&&segmento===viento">
-            <ion-label class="ion-text-center ion-align-items-center">Viento: {{climaActual.wind.speed}} {{velocidad}}</ion-label>
+            <ion-label style="margin-left: 108px;">Viento: {{climaActual.wind.speed}} {{velocidad}}</ion-label>
         </ion-toolbar>
     </div>
 </ion-content>

@@ -49,7 +49,9 @@ export class ClimaPage implements OnInit {
       this.firestore.getUsuario(uid).subscribe((data) => {
         const usuarioData: any = data.payload.data();
         if (usuarioData) {
-          this.ciudades = usuarioData.ciudadesFavoritas;
+          this.busquedas = usuarioData.busquedasEnFB;
+          console.log("búsquedas actuales: ",usuarioData.busquedasEnFB);
+          console.log("Método 'obtenerUsuarioActual() de AuthService': ",this.authService.obtenerUsuarioActual());
         }
       });
     }
@@ -204,17 +206,17 @@ export class ClimaPage implements OnInit {
   //#region Searchbar:
 
   ciudadEscrita: string = ''; //Recibe la ciudad escrita por el usuario en la barra de búsqueda.
-  public ciudades = [ //Sugerencias para la lista de la barra de búsqueda.
-    'Buenos Aires',
-    'La Plata',
-    'Rosario',
-    'Montevideo',
-    'Santiago de Chile',
-    'Río de Janeiro',
-    'Brasilia',
-    'La Paz',
-    'Asunción',
-    'Lima'
+  busquedas: { nombre: string, icono: string, color: string } [] = [ //Sugerencias en la barra de búsqueda.
+    {nombre:'Buenos Aires',icono:'star',color:'#00c3ff'},
+    {nombre:'La Plata',icono:'star',color:'#00c3ff'},
+    {nombre:'Rosario',icono:'star',color:'#00c3ff'},
+    {nombre:'Montevideo',icono:'star',color:'#00c3ff'},
+    {nombre:'Santiago de Chile',icono:'star',color:'#00c3ff'},
+    {nombre:'Río de Janeiro',icono:'star',color:'#00c3ff'},
+    {nombre:'Brasilia',icono:'star',color:'#00c3ff'},
+    {nombre:'La Paz',icono:'star',color:'#00c3ff'},
+    {nombre:'Asunción',icono:'star',color:'#00c3ff'},
+    {nombre:'Lima',icono:'star',color:'#00c3ff'}
   ];
 
   /**
@@ -222,8 +224,9 @@ export class ClimaPage implements OnInit {
    * @param {any} evento - Variable indefinida para recibir eventos del componente.
    */
   sbarObtenerClimaCiudad(buscado:string) {
-    if(buscado!=``) {
-      console.log("Texto colocado en la barra de búsqueda: ",buscado.toLowerCase().trim().replace(/\b\w/g, (match) => match.toUpperCase()));
+    if(buscado!='') {
+      console.log("Texto colocado en la barra de búsqueda: ",
+        buscado.toLowerCase().trim().replace(/\b\w/g, (match) => match.toUpperCase()));
       this.climaService.getGeocodificacion(buscado.toLowerCase().trim()).subscribe({
         next: (r) => {
           this.geoCodificacion=r;
@@ -266,31 +269,74 @@ export class ClimaPage implements OnInit {
   }
 
   /**
-   * @function guardarEnFirebase - guarda los elementos favoritos del ion-list en Firebase.
-   * @param {string} elemento - sugerencia favorita.
+   * @function guardarEnFirebase - guarda los elementos buscados del ion-list en Firebase.
+   * @param {string} pBuscado - sugerencias del ion-list.
    */
-  guardarEnFirebase(elemento:string) {
-    let listaSugeridos = this.ciudades.map(ciudad => ciudad.toLowerCase());
-    if (!listaSugeridos.includes(elemento)) {
-      const uid: string = localStorage.getItem('uid') || ""; //ID del elemento en Firebase.
+  guardarEnFirebase(pBuscado:string) {
+    //Obtiene el ID del usuario en Firebase para acceder a sus búsquedas, sino, devuelve un string vacío.
+    const uid: string = localStorage.getItem('uid') || "";
+    //Se crea un objeto "busqNueva" para representar un item en el objeto "busquedas".
+    const busqNueva = {
+      nombre: pBuscado.charAt(0).toUpperCase() + pBuscado.slice(1).toLowerCase(),
+      icono: 'star',
+      color: '#00c3ff'
+    }
+    
+    //Si el array de objetos "busquedas" NO esta vacío.
+    if(this.busquedas!=undefined) { 
+      //Si se obtuvo un ID de usuario válido.
       if (uid != "") {
-        const ciudadNueva = elemento.charAt(0).toUpperCase() + elemento.slice(1).toLowerCase();
-        if (!this.ciudades.includes(ciudadNueva)) { //Verificar si la ciudad nueva ya está en la lista.
-          this.ciudades.unshift(ciudadNueva); //Insertar nuevo valor al inicio de la lista "ciudades".
-          if (this.ciudades.length > 10) { //Si "ciudades" tiene más de 10 elementos, quitar el último.
-            this.ciudades.pop();
+        //Si "busquedas" NO incluye "busqNueva".
+        if (!this.busquedas.includes(busqNueva)) { 
+          this.busquedas.unshift(busqNueva); //Insertar "busqNueva" en "busquedas".
+          if (this.busquedas.length > 10) { //Si "busquedas" tiene más de 10 elementos, quitar el último.
+            this.busquedas.pop();
           }
-          let actualizados = {
-            ciudadesFavoritas: this.ciudades
-          }
-          this.firestore.actualizarUsuario(uid, actualizados);
+          let busqActualizadas = { busquedasEnFB: this.busquedas }
+          this.firestore.actualizarDatosUsuario(uid, busqActualizadas);
+        }
+        else {
+          console.log("La nueva búsqueda ya está entre las viejas búsquedas. No se repetirá.");
         }
       }
+      else {
+        console.log("No se encontró un ID de usuario válido en Firebase.");
+      }
+    }
+    else {
+      this.busquedas=[{ //Inicializo el array(object) "busquedas".
+        nombre:'',
+        icono:'',
+        color:''
+      }];
+      this.busquedas.unshift(busqNueva); //Agrega "busqNueva" al inicio de "busquedas".
+      this.busquedas.pop(); //Borra la última posición de "busquedas" (el objeto con las propiedades vacías).
+      let busqActualizadas = { busquedasEnFB: this.busquedas }
+      this.firestore.actualizarDatosUsuario(uid, busqActualizadas);
     }
   }
 
-  borrarDeFirebase() {
-
+  borrarDeFirebase(pBuscado: string) {
+    //Obtiene el ID del usuario en Firebase para acceder a sus búsquedas, sino, devuelve un string vacío.
+    const uid: string = localStorage.getItem('uid') || "";
+    console.log("El array busquedas no está vacío. Entró en 'borrar'");
+    //Si el array de objetos "busquedas" NO esta vacío.
+    if(this.busquedas!=undefined) {
+      //El array(string) "listaSugeridos" se rellena con el array(object) "busquedas.nombre" y en minúsculas.
+      let listaSugeridos = this.busquedas.map(item => item.nombre.toLowerCase());
+      //Si "listaSugeridos" SÍ incluye el parámetro "pBuscado".
+      if (listaSugeridos.includes(pBuscado)) {
+        //Encuentra el item de "busqueda" que coincida con "pBuscado".
+        const indice = listaSugeridos.indexOf(pBuscado);
+        //Borra el elemento del array "busquedas". 1 es el número de elementos eliminados. 
+        this.busquedas.splice(indice, 1);
+        //Si se obtuvo ID de usuario.
+        if (uid != "") {
+          let busqActualizadas = { busquedasEnFB: this.busquedas };
+          this.firestore.actualizarDatosUsuario(uid, busqActualizadas);
+        }
+      }
+    }
   }
 
   /**
@@ -299,7 +345,7 @@ export class ClimaPage implements OnInit {
    */
   filtrarElemento(evento:any) {
     const buscado = evento.target.value.toLowerCase();
-    this.ciudades = this.ciudades.filter((c) => c.toLowerCase().indexOf(buscado) > -1);
+    this.busquedas = this.busquedas.filter((c) => c.nombre.toLowerCase().indexOf(buscado) > -1);
   }
 
   ciudadSugerida: string = ''; //Texto copiado del ion-list al ion-searchbar.
@@ -317,20 +363,9 @@ export class ClimaPage implements OnInit {
    */
   mostrarLista() {
     this.listaVisible = !this.listaVisible;
+    console.log("búsquedas después de hacer clic en barra de búsqueda: ",this.busquedas);
   }
-
-  busquedas: { nombre: string, icono: string, color: string } [] = [
-    {nombre:'Buenos Aires',icono:'star',color:'#00c3ff'},
-    {nombre:'La Plata',icono:'star',color:'#00c3ff'},
-    {nombre:'Rosario',icono:'star',color:'#00c3ff'},
-    {nombre:'Montevideo',icono:'star',color:'#00c3ff'},
-    {nombre:'Santiago de Chile',icono:'star',color:'#00c3ff'},
-    {nombre:'Río de Janeiro',icono:'star',color:'#00c3ff'},
-    {nombre:'Brasilia',icono:'star',color:'#00c3ff'},
-    {nombre:'La Paz',icono:'star',color:'#00c3ff'},
-    {nombre:'Asunción',icono:'star',color:'#00c3ff'},
-    {nombre:'Lima',icono:'star',color:'#00c3ff'}
-  ];
+  
   /**
    * @function cambiarIcono - cambia icono y color del botón "Favoritos" en función del evento mouse iniciado.
    */
@@ -338,7 +373,7 @@ export class ClimaPage implements OnInit {
     //De todo el vector "busquedas" obtengo solo los iguales al parámetro "nombre" (único valor).
     const busqActual = this.busquedas.find(item => item.nombre == nombre);
     if (busqActual) { 
-      /** Al valor único "busqActual.icono" le asignó el parámetro "icono": si "icono"=="trash" es true,
+      /** A "busqActual.icono" le asignó el parámetro "icono": si "icono"=="trash" es true, 
        * lo cambio por "star", si es false cambiarlo a "trash", de facto, dejarlo igual.
        * 
        * A "busqActual.color" le asignó el parámetro "icono": si "icono"=="trash" es true, lo cambio por 

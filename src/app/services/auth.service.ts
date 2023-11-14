@@ -47,35 +47,36 @@ export class AuthService {
   }
 
   /**
-   * @function registrar - Permite registrar a un Usuario, usando la API de Firebase. Cuando lo registra, 
+   * @function registrarEnFirebase - Permite registrar a un Usuario, usando la API de Firebase. Cuando lo registra, 
    * envia email de verificacion. Ademas, crea el Usuario en la base de datos de Firestore utilizando el UID
    * y las ciudadesFavoritas como un array vacio.
    * @param {string} email Email del Usuario que se quiere registrar.
    * @param {string} contrasenia Contrasenia del Usuario que se quiere registrar.
    * @returns Promise<any> - retorna una Promsesa con los datos del Usuario (any)
    */
-  async registrar(email: string, contrasenia: string): Promise<any> {
+  async registrarEnFirebase(email: string, contrasenia: string): Promise<any> {
     try {
       this.cerrarSesion();
 
       const { user } = await this.ngFireAuth.createUserWithEmailAndPassword(email, contrasenia);
 
       if (user) {
-        let ciudades: string[] = [
-          'Buenos Aires',
-          'La Plata',
-          'Rosario',
-          'Montevideo',
-          'Santiago de Chile',
-          'Rio de Janeiro',
-          'Brasilia',
-          'La Paz',
-          'Asunción',
-          'Lima'];
+        let busquedasPorDefecto: { nombre: string, icono: string, color: string } [] = [
+          {nombre:'Buenos Aires',icono:'star',color:'#00c3ff'},
+          {nombre:'La Plata',icono:'star',color:'#00c3ff'},
+          {nombre:'Rosario',icono:'star',color:'#00c3ff'},
+          {nombre:'Montevideo',icono:'star',color:'#00c3ff'},
+          {nombre:'Santiago de Chile',icono:'star',color:'#00c3ff'},
+          {nombre:'Río de Janeiro',icono:'star',color:'#00c3ff'},
+          {nombre:'Brasilia',icono:'star',color:'#00c3ff'},
+          {nombre:'La Paz',icono:'star',color:'#00c3ff'},
+          {nombre:'Asunción',icono:'star',color:'#00c3ff'},
+          {nombre:'Lima',icono:'star',color:'#00c3ff'}
+        ];
 
         let data = {
           uid: user.uid,
-          ciudadesFavoritas: ciudades
+          busquedas: busquedasPorDefecto
         }
 
         this.firestore.crearUsuario(data);
@@ -110,24 +111,25 @@ export class AuthService {
           const usuarioData: any = data.payload.data();
           
           if (!usuarioData) {
-            let ciudades: string[] = [
-              'Buenos Aires',
-              'La Plata',
-              'Rosario',
-              'Montevideo',
-              'Santiago de Chile',
-              'Rio de Janeiro',
-              'Brasilia',
-              'La Paz',
-              'Asunción',
-              'Lima'];
+            let busquedasPorDefecto: { nombre: string, icono: string, color: string } [] = [
+              {nombre:'Buenos Aires',icono:'star',color:'#00c3ff'},
+              {nombre:'La Plata',icono:'star',color:'#00c3ff'},
+              {nombre:'Rosario',icono:'star',color:'#00c3ff'},
+              {nombre:'Montevideo',icono:'star',color:'#00c3ff'},
+              {nombre:'Santiago de Chile',icono:'star',color:'#00c3ff'},
+              {nombre:'Río de Janeiro',icono:'star',color:'#00c3ff'},
+              {nombre:'Brasilia',icono:'star',color:'#00c3ff'},
+              {nombre:'La Paz',icono:'star',color:'#00c3ff'},
+              {nombre:'Asunción',icono:'star',color:'#00c3ff'},
+              {nombre:'Lima',icono:'star',color:'#00c3ff'}
+            ];
 
-              let data = {
-                uid: user.uid,
-                ciudadesFavoritas: ciudades
-              }
+            let data = {
+              uid: user.uid,
+              busquedas: busquedasPorDefecto
+            }
 
-              this.firestore.crearUsuario(data);
+            this.firestore.crearUsuario(data);
           }
         });
 

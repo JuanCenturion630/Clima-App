@@ -11,14 +11,15 @@ export class FirestoreService {
   /**
    * @function crearUsuario - Crea un usuario, en la base de datos de Firestore.
    * @param data - Objeto con el uid del Usuario y sus ciudadesFavoritas.
+   * @property {data} uid - ID del usuario en Firebase.
+   * @property {data} busquedas - resultados de búsqueda por el usuario.
    * @returns Promise<void>
    */
-  crearUsuario(data: { uid: string, ciudadesFavoritas: string[] }) {
+  crearUsuario(data: { uid: string, busquedas: { nombre: string, icono: string, color: string }[] }) {
     const { 
       uid, 
-      ciudadesFavoritas 
-    } = data;
-    return this.firestore.collection('usuarios').doc(uid).set({ ciudadesFavoritas });
+      busquedas } = data;
+    return this.firestore.collection('usuarios').doc(uid).set({ busquedas });
   }
 
   /**
@@ -31,12 +32,12 @@ export class FirestoreService {
   }
 
   /**
-   * @function actualizarUsuario - Actualiza los datos del usuario (ciudades favoritas) con UID pasado por parámetro.
+   * @function actualizarUsuario - Actualiza los datos del usuario (búsquedas) con UID pasado por parámetro.
    * @param {string} uid - UID del usuario al que queremos actualizar los datos.
    * @param {any} data - Los datos que queremos sobreescribir del usuario. (Las ciudades favoritas, como un objeto).
    * @returns Promise<void>
    */
-  actualizarUsuario(uid: string, data: any) {
+  actualizarDatosUsuario(uid: string, data: any) {
     return this.firestore.collection('usuarios').doc(uid).set(data);
   }
 }

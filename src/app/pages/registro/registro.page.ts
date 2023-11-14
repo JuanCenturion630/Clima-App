@@ -30,7 +30,7 @@ export class RegistroPage implements OnInit {
         let email: string = this.formularioRegistro.value.email as string;
         let contrasenia: string = this.formularioRegistro.value.contrasenia as string;
   
-        const usuarioRegistrado: any = await this.authService.registrar(email, contrasenia);
+        const usuarioRegistrado: any = await this.authService.registrarEnFirebase(email, contrasenia);
   
         if (usuarioRegistrado) {
           const estaVerificado: boolean = await this.authService.emailVerificado();
