@@ -346,6 +346,33 @@ export class ClimaPage implements OnInit {
   }
 
   /**
+   * @function confirmarBorrado - crea una alarma para notificar al usuario que esta por borrar contenido.
+   * @param {string} pBorrado - elemento a ser borrado.
+   */
+  async confirmarBorrado(pBorrado: string) {
+    const alert = await this.alerta.create({
+      header: 'Confirmar',
+      message: `¿Estás seguro de que deseas borrar "${pBorrado}"?`,
+      buttons: [
+        {
+          text: 'No',
+          role: 'cancel',
+          handler: () => {
+            console.log('Borrado cancelado.');
+          }
+        },
+        {
+          text: 'Sí',
+          handler: () => {
+            this.borrarDeFirebase(pBorrado);
+          }
+        }
+      ]
+    });
+    await alert.present();
+  }
+
+  /**
    * @function filtrarElemento - Según el texto en el ion-searchbar filtra entre la lista de sugerencias.
    * @param {any} evento - Variable indefinida para recibir eventos del componente.
    */
@@ -375,6 +402,7 @@ export class ClimaPage implements OnInit {
    * @function cambiarIcono - cambia icono y color del botón "Favoritos" en función del evento mouse iniciado.
    */
   cambiarIcono(nombre:string,icono:string) {
+    console.log("Entró en cambiarIcono");
     //De todo el vector "busquedas" obtengo solo los iguales al parámetro "nombre" (único valor).
     const busqActual = this.busquedas.find(item => item.nombre == nombre);
     if (busqActual) { 
