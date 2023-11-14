@@ -32,28 +32,54 @@ export class ClimaPage implements OnInit {
     
     //#region Recupera las coordenadas de Login, las imprime en consola y obtiene el clima:
 
-    this.lat =+this.route.snapshot.queryParams['lat'];
-    this.long =+this.route.snapshot.queryParams['long']; 
+    this.lat=+this.route.snapshot.queryParams['lat'];
+    this.long=+this.route.snapshot.queryParams['long'];
     console.log("Latitud en clima.page.ts: " + this.lat);
     console.log("Longitud en clima.page.ts: " + this.long);
-    this.btnClimaActual(this.registro);
+    this.btnClimaActual(this.registro); //Determina el texto y estado del botón Clima Actual/Por Intervalos.
+    this.climaService.getGeocodificacionInversa(this.lat,this.long).subscribe({ //Obtiene dirección por GPS.
+      next: (r) => {
+        this.geoCodificacion=r;
+      },
+      error: (e) => {
+        console.log("Ocurrió un error al cargar la dirección del GPS",e);
+      }
+    });
     //#endregion
   }
 
+  uid:string=''; //ID del usuario en Firebase.
   /**
-   * @function ngOnInit - se ejecuta como primer método de la página luego del constructor.
+   * @function ngOnInit - se ejecuta como primer método de la página luego del constructor y carga el ion-list.
    */
   ngOnInit() {
-    const uid: string = localStorage.getItem('uid') || "";
-    if(uid != ""){
-      this.firestore.getUsuario(uid).subscribe((data) => {
-        const usuarioData: any = data.payload.data();
-        if (usuarioData) {
-          this.busquedas = usuarioData.busquedasEnFB;
-          console.log("búsquedas actuales: ",usuarioData.busquedasEnFB);
-          console.log("Método 'obtenerUsuarioActual() de AuthService': ",this.authService.obtenerUsuarioActual());
+    this.uid = localStorage.getItem('uid') || ""; //Obtengo el ID del usuario o un string vacío.
+    if(this.uid != "") { 
+      this.firestore.getUsuario(this.uid).subscribe( //Obtengo los datos asociados a ese ID.
+        (data) => { 
+          const usuarioData:any = data.payload.data();
+          if (usuarioData) {
+            this.busquedas = usuarioData.busquedasEnFB;
+            if(this.busquedas!=undefined) {
+              console.log("Las búsquedas se cargaron con éxito: ",this.busquedas);
+            }
+            else {
+              this.busquedas = [ //Sino se pudo cargar desde los servidores de Firebase, se hará desde código.
+                {nombre:'Buenos Aires',icono:'star',color:'#00c3ff'},
+                {nombre:'La Plata',icono:'star',color:'#00c3ff'},
+                {nombre:'Rosario',icono:'star',color:'#00c3ff'},
+                {nombre:'Montevideo',icono:'star',color:'#00c3ff'},
+                {nombre:'Santiago de Chile',icono:'star',color:'#00c3ff'},
+                {nombre:'Río de Janeiro',icono:'star',color:'#00c3ff'},
+                {nombre:'Brasilia',icono:'star',color:'#00c3ff'},
+                {nombre:'La Paz',icono:'star',color:'#00c3ff'},
+                {nombre:'Asunción',icono:'star',color:'#00c3ff'},
+                {nombre:'Lima',icono:'star',color:'#00c3ff'}
+              ];
+            }
+          }
         }
-      });
+      );
     }
   }
 
@@ -206,18 +232,7 @@ export class ClimaPage implements OnInit {
   //#region Searchbar:
 
   ciudadEscrita: string = ''; //Recibe la ciudad escrita por el usuario en la barra de búsqueda.
-  busquedas: { nombre: string, icono: string, color: string } [] = [ //Sugerencias en la barra de búsqueda.
-    {nombre:'Buenos Aires',icono:'star',color:'#00c3ff'},
-    {nombre:'La Plata',icono:'star',color:'#00c3ff'},
-    {nombre:'Rosario',icono:'star',color:'#00c3ff'},
-    {nombre:'Montevideo',icono:'star',color:'#00c3ff'},
-    {nombre:'Santiago de Chile',icono:'star',color:'#00c3ff'},
-    {nombre:'Río de Janeiro',icono:'star',color:'#00c3ff'},
-    {nombre:'Brasilia',icono:'star',color:'#00c3ff'},
-    {nombre:'La Paz',icono:'star',color:'#00c3ff'},
-    {nombre:'Asunción',icono:'star',color:'#00c3ff'},
-    {nombre:'Lima',icono:'star',color:'#00c3ff'}
-  ];
+  busquedas: { nombre: string, icono: string, color: string } [] = [];
 
   /**
    * @function sbarObtenerClimaCiudad - En función del texto en la barra de búsqueda se calcula el clima solicitada.
@@ -269,12 +284,10 @@ export class ClimaPage implements OnInit {
   }
 
   /**
-   * @function guardarEnFirebase - guarda los elementos buscados del ion-list en Firebase.
+   * @function guardarEnFirebase - guarda las búsquedas en Firebase.
    * @param {string} pBuscado - sugerencias del ion-list.
    */
   guardarEnFirebase(pBuscado:string) {
-    //Obtiene el ID del usuario en Firebase para acceder a sus búsquedas, sino, devuelve un string vacío.
-    const uid: string = localStorage.getItem('uid') || "";
     //Se crea un objeto "busqNueva" para representar un item en el objeto "busquedas".
     const busqNueva = {
       nombre: pBuscado.charAt(0).toUpperCase() + pBuscado.slice(1).toLowerCase(),
@@ -282,60 +295,53 @@ export class ClimaPage implements OnInit {
       color: '#00c3ff'
     }
     
-    //Si el array de objetos "busquedas" NO esta vacío.
-    if(this.busquedas!=undefined) { 
-      //Si se obtuvo un ID de usuario válido.
-      if (uid != "") {
-        //Si "busquedas" NO incluye "busqNueva".
-        if (!this.busquedas.includes(busqNueva)) { 
-          this.busquedas.unshift(busqNueva); //Insertar "busqNueva" en "busquedas".
-          if (this.busquedas.length > 10) { //Si "busquedas" tiene más de 10 elementos, quitar el último.
-            this.busquedas.pop();
-          }
-          let busqActualizadas = { busquedasEnFB: this.busquedas }
-          this.firestore.actualizarDatosUsuario(uid, busqActualizadas);
+    //Si se obtuvo un ID de usuario válido.
+    if (this.uid != "") {
+      //Si "busquedas" NO incluye "busqNueva".
+      if (!this.busquedas.includes(busqNueva)) { 
+        this.busquedas.unshift(busqNueva); //Insertar "busqNueva" en "busquedas".
+        if (this.busquedas.length > 10) { //Si "busquedas" tiene más de 10 elementos, quitar el último.
+          this.busquedas.pop();
         }
-        else {
-          console.log("La nueva búsqueda ya está entre las viejas búsquedas. No se repetirá.");
-        }
+        let busqActualizadas = { busquedasEnFB: this.busquedas }
+        this.firestore.actualizarDatosUsuario(this.uid, busqActualizadas);
       }
       else {
-        console.log("No se encontró un ID de usuario válido en Firebase.");
+        console.log("La nueva búsqueda ya está entre las viejas. No se repetirá su guardado.");
       }
     }
     else {
-      this.busquedas=[{ //Inicializo el array(object) "busquedas".
-        nombre:'',
-        icono:'',
-        color:''
-      }];
-      this.busquedas.unshift(busqNueva); //Agrega "busqNueva" al inicio de "busquedas".
-      this.busquedas.pop(); //Borra la última posición de "busquedas" (el objeto con las propiedades vacías).
-      let busqActualizadas = { busquedasEnFB: this.busquedas }
-      this.firestore.actualizarDatosUsuario(uid, busqActualizadas);
+      console.log("No se encontró un ID de usuario válido en Firebase.");
     }
   }
 
-  borrarDeFirebase(pBuscado: string) {
-    //Obtiene el ID del usuario en Firebase para acceder a sus búsquedas, sino, devuelve un string vacío.
-    const uid: string = localStorage.getItem('uid') || "";
-    console.log("El array busquedas no está vacío. Entró en 'borrar'");
-    //Si el array de objetos "busquedas" NO esta vacío.
-    if(this.busquedas!=undefined) {
-      //El array(string) "listaSugeridos" se rellena con el array(object) "busquedas.nombre" y en minúsculas.
-      let listaSugeridos = this.busquedas.map(item => item.nombre.toLowerCase());
-      //Si "listaSugeridos" SÍ incluye el parámetro "pBuscado".
-      if (listaSugeridos.includes(pBuscado)) {
-        //Encuentra el item de "busqueda" que coincida con "pBuscado".
-        const indice = listaSugeridos.indexOf(pBuscado);
-        //Borra el elemento del array "busquedas". 1 es el número de elementos eliminados. 
-        this.busquedas.splice(indice, 1);
-        //Si se obtuvo ID de usuario.
-        if (uid != "") {
-          let busqActualizadas = { busquedasEnFB: this.busquedas };
-          this.firestore.actualizarDatosUsuario(uid, busqActualizadas);
-        }
+  /**
+   * @function borrarDeFirebase - borra las búsquedas en Firebase.
+   * @param {string} pBuscado - sugerencias del ion-list. 
+   */
+  borrarDeFirebase(pBuscado: string) { 
+    //Se crea un objeto "busqBorrada" para representar la búsqueda a eliminar.
+    const busqBorrada = {
+      nombre: pBuscado.charAt(0).toUpperCase() + pBuscado.slice(1).toLowerCase(),
+      icono: 'trash',
+      color: '#ff0000'
+    };
+
+    //Si se obtuvo un ID de usuario válido.
+    if (this.uid != "") {
+      //Verifica si "busquedas" incluye "busqBorrada". Devuelve el índice o -1 en caso de no encontrar nada.
+      const indice = this.busquedas.findIndex(item => item.nombre == busqBorrada.nombre);
+      if (indice != -1) {
+        this.busquedas.splice(indice, 1); //Elimina una posición del array(object) "busquedas".
+        let busqActualizadas = { busquedasEnFB: this.busquedas };
+        this.firestore.actualizarDatosUsuario(this.uid, busqActualizadas);
       }
+      else {
+        console.log("No se encontró el elemento. No se puede eliminar.");
+      }
+    }
+    else {
+      console.log("No se encontró un ID de usuario válido en Firebase.");
     }
   }
 
@@ -363,7 +369,6 @@ export class ClimaPage implements OnInit {
    */
   mostrarLista() {
     this.listaVisible = !this.listaVisible;
-    console.log("búsquedas después de hacer clic en barra de búsqueda: ",this.busquedas);
   }
   
   /**

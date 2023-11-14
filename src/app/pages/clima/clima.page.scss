@@ -91,3 +91,10 @@ ion-range {
   --border-width: 2px;
   opacity: 70%;
 }
+.scrollable-label {
+  display: block;
+  white-space: nowrap; //Evita el salto de línea.
+  overflow: hidden;    //Oculta el contenido que sobresale.
+  width: 100%;         //Ajusta el ancho al 100% para ocupar todo el control.
+  overflow-x: auto;    //Habilita el desplazamiento horizontal cuando el contenido se desborda.
+}

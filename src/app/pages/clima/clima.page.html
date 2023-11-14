@@ -85,16 +85,10 @@
   <ion-toolbar>
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
     
-    <!--Nombre ciudad (clima por intervalos)-->
-    <ion-label *ngIf="clima && !estadoBtnClimaActual" class="desviarDerecha">
+    <!--Dirección buscada-->
+    <ion-label *ngIf="geoCodificacion" class="desviarDerecha scrollable-label">
       <span class="opaco">Resultados para </span>
-      <span class="negrita">{{clima.city.name}}, {{clima.city.country}}</span>
-    </ion-label>
-
-    <!--Nombre ciudad (clima por hora actual)-->
-    <ion-label *ngIf="climaActual && estadoBtnClimaActual" class="desviarDerecha">
-      <span class="opaco">Resultados para </span>
-      <span class="negrita">{{climaActual.name}}, {{climaActual.sys.country}}</span>
+      <span class="negrita">{{geoCodificacion.data[0].label}}</span>
     </ion-label>
 
     <!--Botón GPS
