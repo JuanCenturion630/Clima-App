@@ -89,4 +89,24 @@ export class LoginPage {
   	this.router.navigate(['verificar-email']);
 	  }
   }
+
+
+  typePassword:string='password';
+  iconPassword:string='lock-closed';
+  estadoMostrarPassword:boolean=false;
+  /**
+   * @function mostrarPassword - vuelve a la contraseña visible o invisible.
+   */
+  mostrarPassword() {
+    if(!this.estadoMostrarPassword) {
+      this.typePassword='';
+      this.iconPassword='lock-open';
+      this.estadoMostrarPassword=true;
+    }
+    else {
+      this.typePassword='password';
+      this.iconPassword='lock-closed';
+      this.estadoMostrarPassword=false;
+    }
+  }
 }

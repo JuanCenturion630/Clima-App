@@ -52,23 +52,13 @@ export class ClimaPage implements OnInit {
           const usuarioData:any = data.payload.data();
           if (usuarioData) {
             this.busquedas = usuarioData.busquedasEnFB;
-            if(this.busquedas!=undefined) {
+            if(this.busquedas!=undefined&&this.busquedas.length>0) {
               console.log("Las búsquedas se cargaron con éxito desde Firebase: ",this.busquedas);
             }
             else {
-              console.log("No se cargó las búsquedas desde Firebase.");
+              console.log("No hay búsquedas en Firebase.");
               this.busquedas = [ //Sino se pudo cargar desde los servidores de Firebase, se hará desde código.
-                {nombre:'Buenos Aires',icono:'star',color:'#00c3ff'},
-                {nombre:'La Plata',icono:'star',color:'#00c3ff'},
-                {nombre:'Rosario',icono:'star',color:'#00c3ff'},
-                {nombre:'Montevideo',icono:'star',color:'#00c3ff'},
-                {nombre:'Santiago de Chile',icono:'star',color:'#00c3ff'},
-                {nombre:'Río de Janeiro',icono:'star',color:'#00c3ff'},
-                {nombre:'Brasilia',icono:'star',color:'#00c3ff'},
-                {nombre:'La Paz',icono:'star',color:'#00c3ff'},
-                {nombre:'Asunción',icono:'star',color:'#00c3ff'},
-                {nombre:'Lima',icono:'star',color:'#00c3ff'}
-              ];
+                {nombre:'Vacío',icono:'star',color:'#00c3ff'}];
             }
           }
         }
@@ -341,7 +331,7 @@ export class ClimaPage implements OnInit {
       const busqRepetida = this.busquedas.some(item => item.nombre == busqNueva.nombre);
       if (!busqRepetida) {
         this.busquedas.unshift(busqNueva); //Insertar "busqNueva" en "busquedas".
-        if (this.busquedas.length > 10) { //Si "busquedas" tiene más de 10 elementos, quitar el último.
+        if (this.busquedas.length > 10 || this.busquedas[1].nombre==='Vacío') { //Si "busquedas" tiene más de 10 elementos, o el segundo elemento es "vacío" (en caso de haber solo dos), quitar el último.
           this.busquedas.pop();
         }
         let busqActualizadas = { busquedasEnFB: this.busquedas }

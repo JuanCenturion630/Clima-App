@@ -8,13 +8,13 @@
     Seleccione una opción.
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
     <!--Botón para Cambiar de Celsius a Farenheite y viceversa-->
-    <ion-button fill="outline" (click)="sistemaMetrico(); cerrarMenu();" style="--border-radius: 40px; width: 100%; --border-color: #ffffff; --color:#ffffff;">
+    <ion-button fill="outline" (click)="sistemaMetrico(); cerrarMenu();" style="--border-radius: 40px; width: 100%; --border-color: #80d9ff; --color:#80d9ff;">
       <ion-icon slot="start" name="partly-sunny"></ion-icon>
       {{ btnNom }}
     </ion-button>
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
     <!--Botón para cerrar sesión en la aplicación-->
-    <ion-button fill="outline" (click)="cerrarMenu(); cerrarSesion();" style="--border-radius: 40px; width: 100%; --border-color: #ffffff; --color:#ffffff;">
+    <ion-button fill="outline" (click)="cerrarMenu(); cerrarSesion();" style="--border-radius: 40px; width: 100%; --border-color: #80d9ff; --color:#80d9ff;">
       <ion-icon slot="start" name="log-out"></ion-icon>
       Cerrar sesión
     </ion-button>
@@ -49,7 +49,7 @@
     <ion-searchbar placeholder="Ingrese una ciudad" 
       [(ngModel)]="ciudadEscrita" (keyup)="detectarEnter($event)" 
       [(ngModel)]="ciudadSugerida" 
-      (click)="mostrarLista()" expand="full">
+      (click)="mostrarLista()" expand="full" style="--border-radius: 100px">
       <!--(ionInput)="filtrarElemento($event)" [debounce]="1000"-->
     </ion-searchbar>
 
@@ -199,7 +199,6 @@
         <ion-range [disabled]="estadoBtnClimaActual" [ticks]="true" [snaps]="true" [min]="0" [max]="7" (ionChange)="cambiarHoraClima($event)"></ion-range>
       </ion-card-content>
     </ion-card>
-
     <div style="margin-top: 5px;"></div>
   </ion-toolbar>
 

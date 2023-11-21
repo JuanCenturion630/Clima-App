@@ -61,18 +61,7 @@ export class AuthService {
       const { user } = await this.ngFireAuth.createUserWithEmailAndPassword(email, contrasenia);
 
       if (user) {
-        let busquedasPorDefecto: { nombre: string, icono: string, color: string } [] = [
-          {nombre:'Buenos Aires',icono:'star',color:'#00c3ff'},
-          {nombre:'La Plata',icono:'star',color:'#00c3ff'},
-          {nombre:'Rosario',icono:'star',color:'#00c3ff'},
-          {nombre:'Montevideo',icono:'star',color:'#00c3ff'},
-          {nombre:'Santiago de Chile',icono:'star',color:'#00c3ff'},
-          {nombre:'Río de Janeiro',icono:'star',color:'#00c3ff'},
-          {nombre:'Brasilia',icono:'star',color:'#00c3ff'},
-          {nombre:'La Paz',icono:'star',color:'#00c3ff'},
-          {nombre:'Asunción',icono:'star',color:'#00c3ff'},
-          {nombre:'Lima',icono:'star',color:'#00c3ff'}
-        ];
+        let busquedasPorDefecto: { nombre: string, icono: string, color: string } [] = [];
 
         let data = {
           uid: user.uid,
@@ -111,18 +100,7 @@ export class AuthService {
           const usuarioData: any = data.payload.data();
           
           if (!usuarioData) {
-            let busquedasPorDefecto: { nombre: string, icono: string, color: string } [] = [
-              {nombre:'Buenos Aires',icono:'star',color:'#00c3ff'},
-              {nombre:'La Plata',icono:'star',color:'#00c3ff'},
-              {nombre:'Rosario',icono:'star',color:'#00c3ff'},
-              {nombre:'Montevideo',icono:'star',color:'#00c3ff'},
-              {nombre:'Santiago de Chile',icono:'star',color:'#00c3ff'},
-              {nombre:'Río de Janeiro',icono:'star',color:'#00c3ff'},
-              {nombre:'Brasilia',icono:'star',color:'#00c3ff'},
-              {nombre:'La Paz',icono:'star',color:'#00c3ff'},
-              {nombre:'Asunción',icono:'star',color:'#00c3ff'},
-              {nombre:'Lima',icono:'star',color:'#00c3ff'}
-            ];
+            let busquedasPorDefecto: { nombre: string, icono: string, color: string } [] = [];
 
             let data = {
               uid: user.uid,
