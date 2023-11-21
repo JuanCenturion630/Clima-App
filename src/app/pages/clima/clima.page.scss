@@ -89,12 +89,22 @@ ion-range {
   margin-left: 5px;
   --color: #706a6a;
   --border-width: 2px;
-  opacity: 70%;
+  opacity: 100%;
 }
-.scrollable-label {
+.scrollbarEnLabel {
   display: block;
   white-space: nowrap; //Evita el salto de línea.
   overflow: hidden;    //Oculta el contenido que sobresale.
-  width: 100%;         //Ajusta el ancho al 100% para ocupar todo el control.
-  overflow-x: auto;    //Habilita el desplazamiento horizontal cuando el contenido se desborda.
+  text-overflow: ellipsis; //Agrega puntos suspensivos al final del texto desbordado.
+  width: 90%; //Ajusta el ancho al 90% porque al 100 % el texto se corta al final.
+  overflow-x: auto; //Habilita el desplazamiento horizontal cuando el contenido se desborda.
+}
+/**{
+  background-color: transparent;
+  --background:transparent;
+}*/
+.simularIonButtonSegment {
+  height: 10px;
+  text-transform: none; /* Desactivar las mayúsculas automáticas */
+  --border-width: 0px;
 }

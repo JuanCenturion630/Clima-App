@@ -32,19 +32,10 @@ export class ClimaPage implements OnInit {
     
     //#region Recupera las coordenadas de Login, las imprime en consola y obtiene el clima:
 
-    this.lat=+this.route.snapshot.queryParams['lat'];
-    this.long=+this.route.snapshot.queryParams['long'];
-    console.log("Latitud en clima.page.ts: " + this.lat);
-    console.log("Longitud en clima.page.ts: " + this.long);
+    this.lat = +this.route.snapshot.queryParams['lat']; //Se obtiene un objeto y con "+" se lo vuelve número.
+    this.long = +this.route.snapshot.queryParams['long'];
     this.btnClimaActual(this.registro); //Determina el texto y estado del botón Clima Actual/Por Intervalos.
-    this.climaService.getGeocodificacionInversa(this.lat,this.long).subscribe({ //Obtiene dirección por GPS.
-      next: (r) => {
-        this.geoCodificacion=r;
-      },
-      error: (e) => {
-        console.log("Ocurrió un error al cargar la dirección del GPS",e);
-      }
-    });
+    this.geocodificar(this.lat-0.0001689,this.long-0.0017476); //Obtiene dirección.
     //#endregion
   }
 
@@ -53,6 +44,7 @@ export class ClimaPage implements OnInit {
    * @function ngOnInit - se ejecuta como primer método de la página luego del constructor y carga el ion-list.
    */
   ngOnInit() {
+
     this.uid = localStorage.getItem('uid') || ""; //Obtengo el ID del usuario o un string vacío.
     if(this.uid != "") { 
       this.firestore.getUsuario(this.uid).subscribe( //Obtengo los datos asociados a ese ID.
@@ -61,9 +53,10 @@ export class ClimaPage implements OnInit {
           if (usuarioData) {
             this.busquedas = usuarioData.busquedasEnFB;
             if(this.busquedas!=undefined) {
-              console.log("Las búsquedas se cargaron con éxito: ",this.busquedas);
+              console.log("Las búsquedas se cargaron con éxito desde Firebase: ",this.busquedas);
             }
             else {
+              console.log("No se cargó las búsquedas desde Firebase.");
               this.busquedas = [ //Sino se pudo cargar desde los servidores de Firebase, se hará desde código.
                 {nombre:'Buenos Aires',icono:'star',color:'#00c3ff'},
                 {nombre:'La Plata',icono:'star',color:'#00c3ff'},
@@ -100,30 +93,52 @@ export class ClimaPage implements OnInit {
     }
   }
 
+  alertaNoEncontradoEstado:boolean=false;
   /**
    * @function alertaNoEncontrado - Crea un mensaje emergente notificando una búsqueda no encontrada.
    */
   async alertaNoEncontrado() {
-    const alert = await this.alerta.create({
-      header: 'Error',
-      subHeader: 'No se ha encontrado el elemento',
-      message: 'Los datos solicitados no se encuentran en nuestro servicio.',
-      buttons: ['OK'],
-    });
-    await alert.present();
+    if(!this.alertaNoEncontradoEstado) {
+      this.alertaNoEncontradoEstado=true;
+      const alert = await this.alerta.create({
+        header: 'Error',
+        subHeader: 'No se ha encontrado el elemento',
+        message: 'Los datos solicitados no se encuentran en nuestro servicio.',
+        buttons: [
+          {
+            text: 'OK',
+            handler: () => {
+              this.alertaNoEncontradoEstado = false;
+            }
+          }
+        ]
+      });
+      await alert.present();
+    }
   }
 
+  alertaDesconocidoEstado:boolean=false;
   /**
    * @function alertaFallaConexion - Crea un mensaje emergente notificando la ausencia de conexión.
    */
   async alertaDesconocido() {
-    const alert = await this.alerta.create({
-      header: 'Error',
-      subHeader: 'Error desconocido',
-      message: 'No es posible describir la identidad del error. Recargue la aplicación.',
-      buttons: ['OK'],
-    });
-    await alert.present();
+    if(!this.alertaDesconocidoEstado) {
+      this.alertaDesconocidoEstado=true;
+      const alert = await this.alerta.create({
+        header: 'Error',
+        subHeader: 'Error desconocido',
+        message: 'No es posible describir la identidad del error. Recargue la aplicación.',
+        buttons: [
+          {
+            text: 'OK',
+            handler: () => {
+              this.alertaDesconocidoEstado = false;
+            }
+          }
+        ]
+      });
+      await alert.present();
+    }
   }
   //#endregion
 
@@ -167,6 +182,45 @@ export class ClimaPage implements OnInit {
     let lat = ubicacion.coords.latitude;
     let long = ubicacion.coords.longitude;
     this.obtenerClimaCoord(lat,long,unidad,idioma);
+  }
+
+  /** SOBRECARGA (misma función con diferente implementación según cambian los parámetros).
+   * @function geocodificar - utiliza la geocodificación estándar o inversa para obtener coordenadas o direcciones.
+   * @param lat - latitud.
+   * @param long - longitud.
+   * @param direccion 
+   * @param arg1 - representa a 'latitud' o 'direccion'.
+   * @param arg2 - representa a 'longitud', siendo opcional '?'.
+   */
+  geocodificar(lat: number, long: number): void;
+  geocodificar(direccion: string): void;
+  geocodificar(arg1: number | string, arg2?: number): void {
+    if (typeof arg1 === 'number' && typeof arg2 === 'number') {
+      this.climaService.getGeocodificacionInversa(arg1,arg2).subscribe({ //Obtiene dirección por GPS.
+        next: (r) => {
+          this.geoCodificacion=r;
+        },
+        error: (e) => {
+          this.notificarError(e);
+        }
+      }); 
+    }
+    else if (typeof arg1 === 'string') {
+      this.climaService.getGeocodificacion(arg1).subscribe({ //Obtiene coordenadas por dirección.
+        next: (r) => {
+          this.geoCodificacion=r;
+          this.lat=this.geoCodificacion.data[0].latitude;
+          this.long=this.geoCodificacion.data[0].longitude;
+          console.log("API Position Stack: ",this.geoCodificacion.data[0]);
+        },
+        error: (e) => {
+          this.notificarError(e);
+        }
+      });
+    } 
+    else {
+      throw new Error('Parámetros no válidos para geocodificación()');
+    }
   }
 
   /** 
@@ -222,6 +276,7 @@ export class ClimaPage implements OnInit {
 
       this.ciudadEscrita=``; //Limpia la barra de búsqueda.
       this.registro=`ion-button`;
+      this.geocodificar(lat-0.0001689,long-0.0017476);
     }
     catch(error) {
       console.log(error);
@@ -239,30 +294,16 @@ export class ClimaPage implements OnInit {
    * @param {any} evento - Variable indefinida para recibir eventos del componente.
    */
   sbarObtenerClimaCiudad(buscado:string) {
-    if(buscado!='') {
-      console.log("Texto colocado en la barra de búsqueda: ",
-        buscado.toLowerCase().trim().replace(/\b\w/g, (match) => match.toUpperCase()));
-      this.climaService.getGeocodificacion(buscado.toLowerCase().trim()).subscribe({
-        next: (r) => {
-          this.geoCodificacion=r;
-          console.log("API Position Stack: ",this.geoCodificacion);
-          if(this.geoCodificacion.data[0]!=undefined) {
-            this.obtenerClimaCoord(this.geoCodificacion.data[0].latitude,this.geoCodificacion.data[0].longitude,
-              this.unidad,this.idioma);
-            /*Si la dirección fue encontrada, se guarda como sugerido:
-              removiendo todos los espacios en blanco del principio y final del string (.trim())
-              y convirtiendo a la primera letra de todas las palabras del strin en mayúsculas (.replace())*/
-            let buscadoFormateado:string=buscado.trim().replace(/\b\w/g, (match) => match.toUpperCase());
-            this.guardarEnFirebase(buscadoFormateado);
-          }
-          else {
-            this.alertaNoEncontrado();
-          }
-        },
-        error: (e) => {
-          this.notificarError(e);
-        }
-      });
+    if(buscado.trim().length>0) {
+      console.log("Texto colocado en la barra de búsqueda: ",buscado.trim());
+      this.geocodificar(buscado);
+      this.obtenerClimaCoord(this.lat,this.long,this.unidad,this.idioma);
+      /* Si la dirección fue encontrada, se guarda como sugerido:
+       * removiendo todos los espacios en blanco del principio y final del string (.trim())
+       * y convirtiendo a la primera letra de todas las palabras del strin en mayúsculas (.replace())
+       */
+      let buscadoFormateado:string=buscado.trim().replace(/\b\w/g, (match) => match.toUpperCase());
+      this.guardarEnFirebase(buscadoFormateado);
       this.registro=`ion-searchbar`;
     }
     else {
@@ -525,7 +566,7 @@ export class ClimaPage implements OnInit {
    * @function cerrarMenu - Cierra el menú desplegable al encabezado de la página del clima.
    */
   cerrarMenu() {
-    this.menu.close('menuClima');
+    this.menu.close();
   }
 
   /** 
@@ -533,6 +574,7 @@ export class ClimaPage implements OnInit {
    */
   cerrarSesion() {
     this.authService.cerrarSesion(); //Cierra la sesión en Firebase.
+    this.cerrarMenu();
     this.router.navigate(['home']); //Redirige la página a home.
     this.registro='ion-button';
   }

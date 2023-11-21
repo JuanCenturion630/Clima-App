@@ -8,13 +8,13 @@
     Seleccione una opción.
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
     <!--Botón para Cambiar de Celsius a Farenheite y viceversa-->
-    <ion-button fill="outline" (click)="sistemaMetrico(); cerrarMenu();">
+    <ion-button fill="outline" (click)="sistemaMetrico(); cerrarMenu();" style="--border-radius: 40px; width: 100%; --border-color: #ffffff; --color:#ffffff;">
       <ion-icon slot="start" name="partly-sunny"></ion-icon>
       {{ btnNom }}
     </ion-button>
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
     <!--Botón para cerrar sesión en la aplicación-->
-    <ion-button fill="outline" (click)="cerrarMenu(); cerrarSesion();">
+    <ion-button fill="outline" (click)="cerrarMenu(); cerrarSesion();" style="--border-radius: 40px; width: 100%; --border-color: #ffffff; --color:#ffffff;">
       <ion-icon slot="start" name="log-out"></ion-icon>
       Cerrar sesión
     </ion-button>
@@ -32,7 +32,7 @@
 
 <!--"fullscreen" en true provoca que la aplicación llene toda la pantalla-->
 <ion-content [fullscreen]="true">
-  <!--Barra de búsqueda-->
+  <!--Barra de búsqueda y lista de sugerencias-->
   <ion-toolbar>
     <!--Explicación de los parámetros usados en el ion-searchbar:
       "placeholder" es la marca de agua sobre el control.
@@ -76,17 +76,17 @@
         </ion-button>
       </ion-item>
 
-    </ion-list>
+    </ion-list>    
   </ion-toolbar>
 
   <div style="margin-top: 2px;"></div> <!--Espaciado-->
 
-  <!--Resultado para... y botón GPS-->
+  <!--Resultado para (dirección) y botón GPS-->
   <ion-toolbar>
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
     
     <!--Dirección buscada-->
-    <ion-label *ngIf="geoCodificacion" class="desviarDerecha scrollable-label">
+    <ion-label *ngIf="geoCodificacion" class="desviarDerecha scrollbarEnLabel">
       <span class="opaco">Resultados para </span>
       <span class="negrita">{{geoCodificacion.data[0].label}}</span>
     </ion-label>
@@ -118,7 +118,7 @@
     <div style="margin-top: 5px;"></div> <!--Espaciado-->
 
     <!--Fecha y breve descripción (clima por intervalos)-->
-    <ion-label *ngIf="clima && !estadoBtnClimaActual" class="desviarDerecha opaco">
+    <ion-label *ngIf="clima && !estadoBtnClimaActual" class="desviarDerecha opaco scrollbarEnLabel">
       <!--Descripción de las funciones Pipe Angular:
         ".dt": recibe el tiempo en formato UNIX UTC, es decir, como un contador de milisegundos en tiempo universal.
         "*1000": se hace para pasar de milisegundos a segundos.
@@ -134,7 +134,7 @@
     </ion-label>
 
     <!--Fecha y breve descripción (clima por hora actual)-->
-    <ion-label *ngIf="climaActual && estadoBtnClimaActual" class="desviarDerecha opaco">
+    <ion-label *ngIf="climaActual && estadoBtnClimaActual" class="desviarDerecha opaco scrollbarEnLabel">
       {{(climaActual.dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM. HH:mm':'UTC':'es' | titlecase}} | 
       {{climaActual.weather[0].description.charAt(0).toUpperCase() + climaActual.weather[0].description.slice(1).toLowerCase()}}
     </ion-label>
@@ -184,8 +184,10 @@
         </ion-card-content>
       </ion-card-content>
     </ion-card>
+  </ion-toolbar>
 
-    <!--Botón de clima actual/clima por intervalos y barra de horas-->
+  <!--Botón de clima actual/clima por intervalos y barra de horas-->
+  <ion-toolbar>
     <ion-card>
       <ion-card-content>
         <!--Botón de clima actual/clima por intervalos-->
@@ -233,67 +235,142 @@
         <div class="carousel-inner">
           <!--1º Slide-->
           <div class="carousel-item active">
-            <ion-button fill="outline" class="botonDia">
-              <ion-label style="margin-top: 5px;">
-                {{(clima.list[0*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
-                <ion-row>
-                  <img [src]="'https://openweathermap.org/img/wn/'+clima.list[0*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
-                </ion-row>
-                <ion-row style="margin-top: 3px;">{{clima.list[0*8+indiceIonRange].main.temp_max}}{{sm}}</ion-row>
-                <ion-row>{{clima.list[0*8+indiceIonRange].main.temp_min}}{{sm}}</ion-row>
-              </ion-label>
+            <ion-button fill="outline" class="botonDia" style="text-transform: none; --border-radius: 40px;">
+              <ion-row style="width: 100%; height: 100%;">
+                <ion-col style="width: 100%; height: 100%;">
+                  <img style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;"
+                    [src]="'https://openweathermap.org/img/wn/'+clima.list[0*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
+                </ion-col>
+                <ion-col style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                  <ion-row style="font-size: 15px; font-weight: bold;">
+                    {{(clima.list[0*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es' | titlecase}}
+                  </ion-row>
+                  <ion-row style="margin-top: 10px; font-size: 16px; font-weight: bold;">
+                    STa: {{clima.list[0*8+indiceIonRange].main.feels_like}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    MAX: {{clima.list[0*8+indiceIonRange].main.temp_max}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    MIN: {{clima.list[0*8+indiceIonRange].main.temp_min}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    PRE: {{clima.list[0*8+indiceIonRange].main.pressure}} hPa
+                  </ion-row>
+                </ion-col>
+              </ion-row>
             </ion-button>
           </div>
           <!--2º Slide-->
           <div class="carousel-item">
-            <ion-button fill="outline" class="botonDia">
-              <ion-label style="margin-top: 5px;">
-                {{(clima.list[1*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
-                <ion-row>
-                  <img [src]="'https://openweathermap.org/img/wn/'+clima.list[1*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
-                </ion-row>
-                <ion-row style="margin-top: 3px;">{{clima.list[1*8+indiceIonRange].main.temp_max}}{{sm}}</ion-row>
-                <ion-row>{{clima.list[1*8+indiceIonRange].main.temp_min}}{{sm}}</ion-row>
-              </ion-label>
+            <ion-button fill="outline" class="botonDia" style="text-transform: none; --border-radius: 40px;">
+              <ion-row style="width: 100%; height: 100%;">
+                <ion-col style="width: 100%; height: 100%;">
+                  <img style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;"
+                    [src]="'https://openweathermap.org/img/wn/'+clima.list[1*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
+                </ion-col>
+                <ion-col style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                  <ion-row style="font-size: 15px; font-weight: bold;">
+                    {{(clima.list[1*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es' | titlecase}}
+                  </ion-row>
+                  <ion-row style="margin-top: 10px; font-size: 16px; font-weight: bold;">
+                    STa: {{clima.list[1*8+indiceIonRange].main.feels_like}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    MAX: {{clima.list[1*8+indiceIonRange].main.temp_max}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    MIN: {{clima.list[1*8+indiceIonRange].main.temp_min}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    PRE: {{clima.list[1*8+indiceIonRange].main.pressure}} hPa
+                  </ion-row>
+                </ion-col>
+              </ion-row>
             </ion-button>
           </div>
           <!--3º Slide-->
           <div class="carousel-item">
-            <ion-button fill="outline" class="botonDia">
-              <ion-label style="margin-top: 5px;">
-                {{(clima.list[2*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
-                <ion-row>
-                  <img [src]="'https://openweathermap.org/img/wn/'+clima.list[2*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
-                </ion-row>
-                <ion-row style="margin-top: 3px;">{{clima.list[2*8+indiceIonRange].main.temp_max}}{{sm}}</ion-row>
-                <ion-row>{{clima.list[2*8+indiceIonRange].main.temp_min}}{{sm}}</ion-row>
-              </ion-label>
+            <ion-button fill="outline" class="botonDia" style="text-transform: none; --border-radius: 40px;">
+              <ion-row style="width: 100%; height: 100%;">
+                <ion-col style="width: 100%; height: 100%;">
+                  <img style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;"
+                    [src]="'https://openweathermap.org/img/wn/'+clima.list[2*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
+                </ion-col>
+                <ion-col style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                  <ion-row style="font-size: 15px; font-weight: bold;">
+                    {{(clima.list[2*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es' | titlecase}}
+                  </ion-row>
+                  <ion-row style="margin-top: 10px; font-size: 16px; font-weight: bold;">
+                    STa: {{clima.list[2*8+indiceIonRange].main.feels_like}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    MAX: {{clima.list[2*8+indiceIonRange].main.temp_max}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    MIN: {{clima.list[2*8+indiceIonRange].main.temp_min}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    PRE: {{clima.list[2*8+indiceIonRange].main.pressure}} hPa
+                  </ion-row>
+                </ion-col>
+              </ion-row>
             </ion-button>
           </div>
           <!--4º Slide-->
           <div class="carousel-item">
-            <ion-button fill="outline" class="botonDia">
-              <ion-label style="margin-top: 5px;">
-                {{(clima.list[3*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
-                <ion-row>
-                  <img [src]="'https://openweathermap.org/img/wn/'+clima.list[3*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
-                </ion-row>
-                <ion-row style="margin-top: 3px;">{{clima.list[3*8+indiceIonRange].main.temp_max}}{{sm}}</ion-row>
-                <ion-row>{{clima.list[3*8+indiceIonRange].main.temp_min}}{{sm}}</ion-row>
-              </ion-label>
+            <ion-button fill="outline" class="botonDia" style="text-transform: none; --border-radius: 40px;">
+              <ion-row style="width: 100%; height: 100%;">
+                <ion-col style="width: 100%; height: 100%;">
+                  <img style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;"
+                    [src]="'https://openweathermap.org/img/wn/'+clima.list[3*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
+                </ion-col>
+                <ion-col style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                  <ion-row style="font-size: 15px; font-weight: bold;">
+                    {{(clima.list[3*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es' | titlecase}}
+                  </ion-row>
+                  <ion-row style="margin-top: 10px; font-size: 16px; font-weight: bold;">
+                    STa: {{clima.list[3*8+indiceIonRange].main.feels_like}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    MAX: {{clima.list[3*8+indiceIonRange].main.temp_max}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    MIN: {{clima.list[3*8+indiceIonRange].main.temp_min}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    PRE: {{clima.list[3*8+indiceIonRange].main.pressure}} hPa
+                  </ion-row>
+                </ion-col>
+              </ion-row>
             </ion-button>
           </div>
           <!--5º Slide-->
           <div class="carousel-item">
-            <ion-button fill="outline" class="botonDia">
-              <ion-label style="margin-top: 5px;">
-                {{(clima.list[4*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es'}}
-                <ion-row>
-                  <img [src]="'https://openweathermap.org/img/wn/'+clima.list[4*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
-                </ion-row>
-                <ion-row style="margin-top: 3px;">{{clima.list[4*8+indiceIonRange].main.temp_max}}{{sm}}</ion-row>
-                <ion-row>{{clima.list[4*8+indiceIonRange].main.temp_min}}{{sm}}</ion-row>
-              </ion-label>
+            <ion-button fill="outline" class="botonDia" style="text-transform: none; --border-radius: 40px;">
+              <ion-row style="width: 100%; height: 100%;">
+                <ion-col style="width: 100%; height: 100%;">
+                  <img style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;"
+                    [src]="'https://openweathermap.org/img/wn/'+clima.list[4*8+indiceIonRange].weather[0].icon+'@2x.png'"/>
+                </ion-col>
+                <ion-col style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                  <ion-row style="font-size: 15px; font-weight: bold;">
+                    {{(clima.list[4*8+indiceIonRange].dt * 1000 - (3 * 60 * 60 * 1000)) | date:'EEE, dd MMM':'UTC':'es' | titlecase}}
+                  </ion-row>
+                  <ion-row style="margin-top: 10px; font-size: 16px; font-weight: bold;">
+                    STa: {{clima.list[4*8+indiceIonRange].main.feels_like}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    MAX: {{clima.list[4*8+indiceIonRange].main.temp_max}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    MIN: {{clima.list[4*8+indiceIonRange].main.temp_min}}{{sm}}
+                  </ion-row>
+                  <ion-row style="font-size: 16px; font-weight: bold;">
+                    PRE: {{clima.list[4*8+indiceIonRange].main.pressure}} hPa
+                  </ion-row>
+                </ion-col>
+              </ion-row>
             </ion-button>
           </div>
         </div>
@@ -316,7 +393,30 @@
   <!--Tarjeta del clima por intervalos deshabilitada cuando está el clima actual-->
   <ion-toolbar *ngIf="climaActual && estadoBtnClimaActual">
     <div class="container">
-      <ion-button fill="outline" class="botonDia">
+      <ion-button fill="outline" class="botonDia" style="text-transform: none; --border-radius: 40px">
+        <ion-row style="width: 100%; height: 100%;">
+          <ion-col style="width: 100%; height: 100%;">
+            <img style="width: 100%; height: 100%; display: flex; justify-content: center; align-items: center;" 
+              [src]="'https://openweathermap.org/img/wn/'+climaActual.weather[0].icon+'@2x.png'"/>
+          </ion-col>
+          <ion-col style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <ion-row style="font-size: 15px; font-weight: bold;">
+              AHORA
+            </ion-row>
+            <ion-row style="margin-top: 10px; font-size: 16px; font-weight: bold;">
+              STa: {{climaActual.main.feels_like}}{{sm}}
+            </ion-row>
+            <ion-row style="font-size: 16px; font-weight: bold;">
+              MAX: {{climaActual.main.temp_max}}{{sm}}
+            </ion-row>
+            <ion-row style="font-size: 16px; font-weight: bold;">
+              MIN: {{climaActual.main.temp_min}}{{sm}}
+            </ion-row>
+            <ion-row style="font-size: 16px; font-weight: bold;">
+              PRE: {{climaActual.main.pressure}} hPa
+            </ion-row>
+          </ion-col>
+        </ion-row>
       </ion-button>
     </div>
     <div style="margin-top: 7px;"></div> <!--Espaciado-->

@@ -133,7 +133,7 @@ export class MapaPage {
         console.log('Coordenadas del dispositivo [latitud, longitud]: ', lat, long);
       
         if(cuadroClima!=null) { //Rellena el cuadro de clima.
-          mapaPage.getDireccion(lat,long);
+          mapaPage.getDireccion(lat-0.0001689,long-0.0017476);
           mapaPage.getClimaActual(lat,long,mapaPage.unidad,mapaPage.idioma);
         }
       }
@@ -250,7 +250,7 @@ export class MapaPage {
       error: (e) => {
         this.notificarError(e);
       }
-    })
+    });
   }
   //#endregion
 
@@ -325,7 +325,7 @@ export class MapaPage {
    * @function cerrarMenu - Cierra el menú desplegable al encabezado de la página del mapa.
    */
   cerrarMenu() {
-    this.menuMapa.close('menuMapa');
+    this.menuMapa.close();
   }
 
   /** 
@@ -333,8 +333,8 @@ export class MapaPage {
    */
   cerrarSesion() {
     this.authService.cerrarSesion(); //Cierra la sesión en Firebase.
-    this.router.navigate(['home']); //Redirige la página a home.
-    
+    this.cerrarMenu();
+    this.router.navigate(['home']); //Redirige la página a home.   
   }
   //#endregion
 }
