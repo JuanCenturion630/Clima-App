@@ -545,7 +545,7 @@ export class ClimaPage implements OnInit {
     console.log(`Registro: `,this.registro);
 
     if(this.registro==`ion-searchbar`) {
-      this.sbarObtenerClimaCiudad(this.ciudadEscrita);
+      this.sbarObtenerClimaCiudad(this.ciudadSugerida);
     }
     else {
       this.obtenerClimaCoord(this.lat,this.long,this.unidad,this.idioma);
